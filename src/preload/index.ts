@@ -2,14 +2,27 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
-  onMenuFileOpen: (callback: () => void): void => {
-    ipcRenderer.on('menu:file-open', callback)
+  openFile: (): Promise<{ filePath: string; content: string } | null> =>
+    ipcRenderer.invoke('file:open'),
+  saveFile: (filePath: string, content: string): Promise<boolean> =>
+    ipcRenderer.invoke('file:save', filePath, content),
+  saveFileAs: (content: string): Promise<string | null> =>
+    ipcRenderer.invoke('file:save-as', content),
+
+  onMenuFileOpen: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('menu:file-open', handler)
+    return () => ipcRenderer.removeListener('menu:file-open', handler)
   },
-  onMenuFileSave: (callback: () => void): void => {
-    ipcRenderer.on('menu:file-save', callback)
+  onMenuFileSave: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('menu:file-save', handler)
+    return () => ipcRenderer.removeListener('menu:file-save', handler)
   },
-  onMenuFileSaveAs: (callback: () => void): void => {
-    ipcRenderer.on('menu:file-save-as', callback)
+  onMenuFileSaveAs: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('menu:file-save-as', handler)
+    return () => ipcRenderer.removeListener('menu:file-save-as', handler)
   }
 }
 

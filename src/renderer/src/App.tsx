@@ -1,3 +1,4 @@
+import { useEffect, useCallback } from 'react'
 import { GraphCanvas } from './components/graph/GraphCanvas'
 import { DetailPanel } from './components/detail/DetailPanel'
 import { ValidationPanel } from './components/validation/ValidationPanel'
@@ -11,10 +12,54 @@ function App(): React.JSX.Element {
   const filePath = useOntologyStore((s) => s.filePath)
   const isDirty = useOntologyStore((s) => s.isDirty)
   const loadFromTurtle = useOntologyStore((s) => s.loadFromTurtle)
+  const exportToTurtle = useOntologyStore((s) => s.exportToTurtle)
+  const setFilePath = useOntologyStore((s) => s.setFilePath)
+  const markClean = useOntologyStore((s) => s.markClean)
   const toggleTheme = useUIStore((s) => s.toggleTheme)
   const theme = useUIStore((s) => s.theme)
   const selectedNodeId = useUIStore((s) => s.selectedNodeId)
   const selectedEdgeId = useUIStore((s) => s.selectedEdgeId)
+
+  const handleOpen = useCallback(async () => {
+    const result = await window.api.openFile()
+    if (result) {
+      loadFromTurtle(result.content, result.filePath)
+    }
+  }, [loadFromTurtle])
+
+  const handleSave = useCallback(async () => {
+    const turtle = exportToTurtle()
+    const currentPath = useOntologyStore.getState().filePath
+    if (currentPath && !currentPath.startsWith('sample://')) {
+      await window.api.saveFile(currentPath, turtle)
+      markClean()
+    } else {
+      const newPath = await window.api.saveFileAs(turtle)
+      if (newPath) {
+        setFilePath(newPath)
+        markClean()
+      }
+    }
+  }, [exportToTurtle, setFilePath, markClean])
+
+  const handleSaveAs = useCallback(async () => {
+    const turtle = exportToTurtle()
+    const newPath = await window.api.saveFileAs(turtle)
+    if (newPath) {
+      setFilePath(newPath)
+      markClean()
+    }
+  }, [exportToTurtle, setFilePath, markClean])
+
+  // Listen for menu events
+  useEffect(() => {
+    const cleanups = [
+      window.api.onMenuFileOpen(handleOpen),
+      window.api.onMenuFileSave(handleSave),
+      window.api.onMenuFileSaveAs(handleSaveAs)
+    ]
+    return () => cleanups.forEach((fn) => fn())
+  }, [handleOpen, handleSave, handleSaveAs])
 
   const classCount = ontology.classes.size
   const propCount = ontology.objectProperties.size + ontology.datatypeProperties.size

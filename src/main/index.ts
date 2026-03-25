@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createMenu } from './menu'
+import { registerFileIPC } from './ipc/file'
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -42,6 +43,8 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  registerFileIPC()
 
   const mainWindow = createWindow()
   Menu.setApplicationMenu(createMenu(mainWindow))
