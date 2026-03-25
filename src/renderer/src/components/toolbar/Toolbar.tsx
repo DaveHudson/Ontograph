@@ -34,7 +34,7 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
   }, [showClaudeMenu])
 
   return (
-    <div className="h-10 border-b border-border bg-card/80 backdrop-blur-sm flex items-center gap-1 shrink-0 app-drag-region" style={{ paddingLeft: 78, paddingRight: 12 }}>
+    <div className="h-10 border-b border-border bg-card/80 backdrop-blur-sm flex items-center gap-1 shrink-0 app-drag-region relative z-50" style={{ paddingLeft: 78, paddingRight: 12 }}>
       {/* macOS traffic lights occupy ~78px */}
 
       {/* File ops */}

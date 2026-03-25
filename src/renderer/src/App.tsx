@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react'
 import { GraphCanvas } from './components/graph/GraphCanvas'
 import { DetailPanel } from './components/detail/DetailPanel'
-import { ValidationPanel } from './components/validation/ValidationPanel'
 import { ChatPanel } from './components/chat/ChatPanel'
 import { StatusBar } from './components/status-bar/StatusBar'
 import { Toolbar } from './components/toolbar/Toolbar'
@@ -157,17 +156,6 @@ function App(): React.JSX.Element {
             {/* Chat Panel */}
             <ChatPanel />
 
-            {/* Validation Panel */}
-            {hasContent && (
-              <div className="border-t border-border">
-                <div className="px-3 py-2 border-b border-border">
-                  <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Validation
-                  </h2>
-                </div>
-                <ValidationPanel />
-              </div>
-            )}
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

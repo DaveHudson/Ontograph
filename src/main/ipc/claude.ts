@@ -254,7 +254,7 @@ export function registerClaudeIPC(): void {
         systemPrompt: SYSTEM_PROMPT,
         maxTurns: 20,
         abortController: currentAbort,
-        persistSession: false,
+        persistSession: true,
         ...(sessionId ? { resume: sessionId } : {}),
         ...authOptions
       }
