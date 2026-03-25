@@ -3,6 +3,7 @@ import { GraphCanvas } from './components/graph/GraphCanvas'
 import { DetailPanel } from './components/detail/DetailPanel'
 import { ValidationPanel } from './components/validation/ValidationPanel'
 import { ChatPanel } from './components/chat/ChatPanel'
+import { StatusBar } from './components/status-bar/StatusBar'
 import { useOntologyStore } from './store/ontology'
 import { useUIStore } from './store/ui'
 import './components/graph/graph-node-styles.css'
@@ -10,16 +11,15 @@ import peopleTtl from './samples/people.ttl?raw'
 
 function App(): React.JSX.Element {
   const ontology = useOntologyStore((s) => s.ontology)
-  const filePath = useOntologyStore((s) => s.filePath)
-  const isDirty = useOntologyStore((s) => s.isDirty)
   const loadFromTurtle = useOntologyStore((s) => s.loadFromTurtle)
   const exportToTurtle = useOntologyStore((s) => s.exportToTurtle)
   const setFilePath = useOntologyStore((s) => s.setFilePath)
   const markClean = useOntologyStore((s) => s.markClean)
-  const toggleTheme = useUIStore((s) => s.toggleTheme)
-  const theme = useUIStore((s) => s.theme)
   const selectedNodeId = useUIStore((s) => s.selectedNodeId)
   const selectedEdgeId = useUIStore((s) => s.selectedEdgeId)
+  const setSelectedNode = useUIStore((s) => s.setSelectedNode)
+  const setSelectedEdge = useUIStore((s) => s.setSelectedEdge)
+  const removeClass = useOntologyStore((s) => s.removeClass)
 
   const handleOpen = useCallback(async () => {
     const result = await window.api.openFile()
@@ -31,7 +31,7 @@ function App(): React.JSX.Element {
   const handleSave = useCallback(async () => {
     const turtle = exportToTurtle()
     const currentPath = useOntologyStore.getState().filePath
-    if (currentPath && !currentPath.startsWith('sample://')) {
+    if (currentPath && !currentPath.startsWith('sample://') && !currentPath.startsWith('Sample:')) {
       await window.api.saveFile(currentPath, turtle)
       markClean()
     } else {
@@ -52,7 +52,7 @@ function App(): React.JSX.Element {
     }
   }, [exportToTurtle, setFilePath, markClean])
 
-  // Listen for menu events
+  // Menu events
   useEffect(() => {
     const cleanups = [
       window.api.onMenuFileOpen(handleOpen),
@@ -62,8 +62,30 @@ function App(): React.JSX.Element {
     return () => cleanups.forEach((fn) => fn())
   }, [handleOpen, handleSave, handleSaveAs])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent): void {
+      // Escape — deselect
+      if (e.key === 'Escape') {
+        setSelectedNode(null)
+        setSelectedEdge(null)
+      }
+
+      // Delete/Backspace — delete selected node (when not in an input)
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNodeId) {
+        const target = e.target as HTMLElement
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          e.preventDefault()
+          removeClass(selectedNodeId)
+          setSelectedNode(null)
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedNodeId, setSelectedNode, setSelectedEdge, removeClass])
+
   const classCount = ontology.classes.size
-  const propCount = ontology.objectProperties.size + ontology.datatypeProperties.size
   const hasContent = classCount > 0
   const hasSelection = selectedNodeId !== null || selectedEdgeId !== null
 
@@ -92,22 +114,7 @@ function App(): React.JSX.Element {
           )}
         </div>
 
-        {/* Status Bar */}
-        <div className="h-7 border-t border-border bg-card px-3 flex items-center text-xs text-muted-foreground gap-4 shrink-0">
-          <span>{filePath ? `${filePath}${isDirty ? ' *' : ''}` : 'No file open'}</span>
-          <span className="ml-auto flex items-center gap-3">
-            <span>
-              {classCount} classes &middot; {propCount} properties
-            </span>
-            <button
-              onClick={toggleTheme}
-              className="hover:text-foreground transition-colors"
-              title="Toggle theme"
-            >
-              {theme === 'dark' ? '☀' : '☾'}
-            </button>
-          </span>
-        </div>
+        <StatusBar />
       </div>
 
       {/* Right Sidebar */}
