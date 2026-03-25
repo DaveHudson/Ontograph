@@ -28,6 +28,7 @@ interface ContextMenuState {
 export function GraphCanvas(): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
+  const isFirstMountRef = useRef(true)
   const ontology = useOntologyStore((s) => s.ontology)
   const addClass = useOntologyStore((s) => s.addClass)
   const removeClass = useOntologyStore((s) => s.removeClass)
@@ -44,10 +45,13 @@ export function GraphCanvas(): React.JSX.Element {
     ([k]) => k !== 'owl' && k !== 'rdf' && k !== 'rdfs' && k !== 'xsd'
   )?.[1] || 'http://example.org/ontology#'
 
+  const baseNsRef = useRef(baseNs)
+  useEffect(() => { baseNsRef.current = baseNs }, [baseNs])
+
   const initCytoscape = useCallback(() => {
     if (!containerRef.current) return
 
-    const elements = ontologyToCytoscapeElements(ontology)
+    const elements = ontologyToCytoscapeElements(useOntologyStore.getState().ontology)
 
     const cy = cytoscape({
       container: containerRef.current,
@@ -108,7 +112,7 @@ export function GraphCanvas(): React.JSX.Element {
             action: () => {
               const name = prompt('Subclass name:')
               if (name) {
-                const uri = `${baseNs}${name.replace(/\s+/g, '')}`
+                const uri = `${baseNsRef.current}${name.replace(/\s+/g, '')}`
                 addClass(uri, { label: name, subClassOf: [nodeId] })
               }
             }
@@ -160,7 +164,7 @@ export function GraphCanvas(): React.JSX.Element {
               action: () => {
                 const name = prompt('Class name:')
                 if (name) {
-                  const uri = `${baseNs}${name.replace(/\s+/g, '')}`
+                  const uri = `${baseNsRef.current}${name.replace(/\s+/g, '')}`
                   addClass(uri, { label: name })
                 }
               }
@@ -174,15 +178,54 @@ export function GraphCanvas(): React.JSX.Element {
     setCyInstance(cy)
 
     return () => {
+      cyRef.current = null
       setCyInstance(null)
       cy.destroy()
     }
-  }, [ontology, setSelectedNode, setSelectedEdge, addClass, removeClass, removeObjectProperty, baseNs])
+  }, [setSelectedNode, setSelectedEdge, addClass, removeClass, removeObjectProperty])
 
   useEffect(() => {
     const cleanup = initCytoscape()
     return cleanup
   }, [initCytoscape])
+
+  // Incremental graph updates — preserves node positions on data-only changes
+  useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false
+      return
+    }
+    const cy = cyRef.current
+    if (!cy) return
+
+    const newElements = ontologyToCytoscapeElements(ontology)
+    const newElementMap = new Map(newElements.map((el) => [el.data.id as string, el]))
+
+    // Remove elements no longer in the ontology
+    let structureChanged = false
+    cy.elements().forEach((el) => {
+      if (!newElementMap.has(el.id())) {
+        el.remove()
+        structureChanged = true
+      }
+    })
+
+    // Update existing / collect new
+    const toAdd: cytoscape.ElementDefinition[] = []
+    for (const el of newElements) {
+      const id = el.data.id as string
+      const existing = cy.getElementById(id)
+      if (existing.length > 0) {
+        existing.data(el.data)
+      } else {
+        toAdd.push(el as cytoscape.ElementDefinition)
+        structureChanged = true
+      }
+    }
+
+    if (toAdd.length > 0) cy.add(toAdd)
+    if (structureChanged) cy.layout(getLayoutOptions(useUIStore.getState().graphLayout)).run()
+  }, [ontology])
 
 
   const cy = useCyStore((s) => s.instance)

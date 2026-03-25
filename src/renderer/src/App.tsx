@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { GraphCanvas } from './components/graph/GraphCanvas'
 import { DetailPanel } from './components/detail/DetailPanel'
 import { ChatPanel } from './components/chat/ChatPanel'
@@ -98,9 +98,15 @@ function App(): React.JSX.Element {
     }
   }, [sidebarVisible])
 
+  const [activeTab, setActiveTab] = useState<'properties' | 'chat'>('chat')
+
   const classCount = ontology.classes.size
   const hasContent = classCount > 0
   const hasSelection = selectedNodeId !== null || selectedEdgeId !== null
+
+  useEffect(() => {
+    if (hasSelection) setActiveTab('properties')
+  }, [hasSelection])
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -141,21 +147,38 @@ function App(): React.JSX.Element {
           order={2}
         >
           <div className="h-full bg-card flex flex-col">
-            {/* Detail Panel (when something selected) */}
-            {hasSelection && (
-              <div className="border-b border-border overflow-y-auto max-h-[50%]">
-                <div className="px-3 py-2 border-b border-border bg-card sticky top-0">
-                  <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Properties
-                  </h2>
-                </div>
-                <DetailPanel />
+            {/* Tab bar */}
+            <div className="flex items-center justify-center px-3 py-2 border-b border-border shrink-0">
+              <span className="isolate inline-flex rounded-md shadow-xs">
+                <button
+                  onClick={() => setActiveTab('properties')}
+                  className={`relative inline-flex items-center rounded-l-md px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ring-border transition-colors focus:z-10 ${activeTab === 'properties' ? 'bg-accent text-accent-foreground' : 'bg-card text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
+                >
+                  Properties
+                </button>
+                <button
+                  onClick={() => setActiveTab('chat')}
+                  className={`relative -ml-px inline-flex items-center rounded-r-md px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ring-border transition-colors focus:z-10 ${activeTab === 'chat' ? 'bg-accent text-accent-foreground' : 'bg-card text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
+                >
+                  Chat
+                </button>
+              </span>
+            </div>
+
+            {/* Tab content */}
+            {activeTab === 'properties' ? (
+              <div className="flex-1 overflow-y-auto">
+                {hasSelection ? (
+                  <DetailPanel />
+                ) : (
+                  <div className="p-4 text-sm text-muted-foreground text-center mt-8">
+                    Select a node or edge to view properties
+                  </div>
+                )}
               </div>
+            ) : (
+              <ChatPanel />
             )}
-
-            {/* Chat Panel */}
-            <ChatPanel />
-
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

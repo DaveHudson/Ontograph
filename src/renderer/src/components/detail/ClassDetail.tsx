@@ -11,13 +11,25 @@ function localName(uri: string): string {
   return idx >= 0 ? uri.substring(idx + 1) : uri
 }
 
+const XSD = 'http://www.w3.org/2001/XMLSchema#'
+const XSD_TYPES = [
+  'string', 'boolean', 'integer', 'decimal', 'float', 'double',
+  'date', 'dateTime', 'time', 'duration',
+  'anyURI', 'base64Binary', 'hexBinary',
+  'positiveInteger', 'negativeInteger', 'nonNegativeInteger', 'nonPositiveInteger',
+  'long', 'int', 'short', 'byte',
+]
+
 export function ClassDetail({ cls }: Props): React.JSX.Element {
   const updateClass = useOntologyStore((s) => s.updateClass)
+  const updateDatatypeProperty = useOntologyStore((s) => s.updateDatatypeProperty)
   const ontology = useOntologyStore((s) => s.ontology)
   const [editingLabel, setEditingLabel] = useState(false)
   const [editingComment, setEditingComment] = useState(false)
   const [labelValue, setLabelValue] = useState(cls.label || '')
   const [commentValue, setCommentValue] = useState(cls.comment || '')
+  const [editingPropUri, setEditingPropUri] = useState<string | null>(null)
+  const [editingPropValue, setEditingPropValue] = useState('')
 
   const dtProps = Array.from(ontology.datatypeProperties.values()).filter((p) =>
     p.domain.includes(cls.uri)
@@ -126,9 +138,47 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
           <div className="text-xs text-muted-foreground mb-1">Datatype Properties</div>
           <div className="space-y-0.5">
             {dtProps.map((p) => (
-              <div key={p.uri} className="flex justify-between text-xs bg-secondary rounded px-2 py-1">
-                <span>{p.label || localName(p.uri)}</span>
-                <span className="text-muted-foreground font-mono">{localName(p.range)}</span>
+              <div key={p.uri} className="flex justify-between items-center text-xs bg-secondary rounded px-2 py-1">
+                {editingPropUri === p.uri ? (
+                  <input
+                    autoFocus
+                    value={editingPropValue}
+                    onChange={(e) => setEditingPropValue(e.target.value)}
+                    onBlur={() => {
+                      updateDatatypeProperty(p.uri, { label: editingPropValue || undefined })
+                      setEditingPropUri(null)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        updateDatatypeProperty(p.uri, { label: editingPropValue || undefined })
+                        setEditingPropUri(null)
+                      }
+                      if (e.key === 'Escape') {
+                        setEditingPropUri(null)
+                      }
+                    }}
+                    className="flex-1 bg-background rounded px-1 outline-none focus:ring-1 focus:ring-ring"
+                  />
+                ) : (
+                  <span
+                    onClick={() => { setEditingPropUri(p.uri); setEditingPropValue(p.label || localName(p.uri)) }}
+                    className="cursor-pointer hover:text-foreground"
+                  >
+                    {p.label || localName(p.uri)}
+                  </span>
+                )}
+                <select
+                  value={p.range}
+                  onChange={(e) => updateDatatypeProperty(p.uri, { range: e.target.value })}
+                  className="ml-2 shrink-0 bg-background text-muted-foreground font-mono text-xs rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                >
+                  {XSD_TYPES.map((t) => (
+                    <option key={t} value={`${XSD}${t}`}>{t}</option>
+                  ))}
+                  {!p.range.startsWith(XSD) && (
+                    <option value={p.range}>{localName(p.range)}</option>
+                  )}
+                </select>
               </div>
             ))}
           </div>
