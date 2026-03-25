@@ -44,7 +44,7 @@ export function getCytoscapeStylesheet(): Stylesheet[] {
     {
       selector: 'edge[type = "objectProperty"]',
       style: {
-        width: 2,
+        width: 1.5,
         'line-color': 'var(--graph-edge-property)',
         'target-arrow-color': 'var(--graph-edge-property)',
         'target-arrow-shape': 'triangle',
@@ -52,10 +52,13 @@ export function getCytoscapeStylesheet(): Stylesheet[] {
         'curve-style': 'bezier',
         label: 'data(label)',
         'font-size': 11,
-        color: 'var(--graph-edge-property)',
-        'text-background-color': 'var(--graph-bg)',
-        'text-background-opacity': 0.85,
-        'text-background-padding': '3px',
+        'font-weight': '500',
+        color: '#ffffff',
+        'text-background-color': 'var(--graph-edge-property)',
+        'text-background-opacity': 1,
+        'text-background-padding': '4px',
+        'text-background-shape': 'roundrectangle',
+        'text-border-width': 0,
         'text-rotation': 'autorotate',
         'edge-text-rotation': 'autorotate'
       }
@@ -72,12 +75,16 @@ export function getCytoscapeStylesheet(): Stylesheet[] {
         'target-arrow-shape': 'triangle-backcurve',
         'arrow-scale': 1,
         'curve-style': 'bezier',
-        label: '',
+        label: 'subClassOf',
         'font-size': 10,
-        color: 'var(--graph-edge-subclass)',
-        'text-background-color': 'var(--graph-bg)',
-        'text-background-opacity': 0.85,
-        'text-background-padding': '2px'
+        'font-weight': '500',
+        color: '#ffffff',
+        'text-background-color': 'var(--graph-edge-subclass)',
+        'text-background-opacity': 1,
+        'text-background-padding': '3px',
+        'text-background-shape': 'roundrectangle',
+        'text-rotation': 'autorotate',
+        'edge-text-rotation': 'autorotate'
       }
     },
     // DisjointWith edges
@@ -89,12 +96,16 @@ export function getCytoscapeStylesheet(): Stylesheet[] {
         'line-style': 'dotted',
         'target-arrow-shape': 'none',
         'curve-style': 'bezier',
-        label: 'disjoint',
-        'font-size': 9,
-        color: 'var(--destructive)',
-        'text-background-color': 'var(--graph-bg)',
-        'text-background-opacity': 0.85,
-        'text-background-padding': '2px'
+        label: 'disjointWith',
+        'font-size': 10,
+        'font-weight': '500',
+        color: '#ffffff',
+        'text-background-color': 'var(--destructive)',
+        'text-background-opacity': 1,
+        'text-background-padding': '3px',
+        'text-background-shape': 'roundrectangle',
+        'text-rotation': 'autorotate',
+        'edge-text-rotation': 'autorotate'
       }
     },
     // Selected edge

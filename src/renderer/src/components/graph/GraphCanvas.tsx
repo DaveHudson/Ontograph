@@ -180,7 +180,7 @@ export function GraphCanvas(): React.JSX.Element {
       <div
         ref={containerRef}
         className="w-full h-full"
-        style={{ backgroundColor: 'var(--graph-bg)' }}
+        style={{ background: 'var(--graph-bg)' }}
       />
       {contextMenu && (
         <ContextMenu

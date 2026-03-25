@@ -21,7 +21,7 @@ interface UseClaudeReturn {
   setApiKey: (key: string) => void
   cliDetected: boolean
   isReady: boolean
-  sendMessage: (message: string) => void
+  sendMessage: (message: string, context?: string) => void
   resetSession: () => void
 }
 

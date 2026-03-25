@@ -1,9 +1,12 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { GraphCanvas } from './components/graph/GraphCanvas'
 import { DetailPanel } from './components/detail/DetailPanel'
 import { ValidationPanel } from './components/validation/ValidationPanel'
 import { ChatPanel } from './components/chat/ChatPanel'
 import { StatusBar } from './components/status-bar/StatusBar'
+import { Toolbar } from './components/toolbar/Toolbar'
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './components/ui/resizable'
+import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useOntologyStore } from './store/ontology'
 import { useUIStore } from './store/ui'
 import './components/graph/graph-node-styles.css'
@@ -85,19 +88,32 @@ function App(): React.JSX.Element {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [selectedNodeId, setSelectedNode, setSelectedEdge, removeClass])
 
+  const sidebarVisible = useUIStore((s) => s.sidebarVisible)
+  const sidebarRef = useRef<PanelImperativeHandle>(null)
+
+  useEffect(() => {
+    if (sidebarVisible) {
+      sidebarRef.current?.expand()
+    } else {
+      sidebarRef.current?.collapse()
+    }
+  }, [sidebarVisible])
+
   const classCount = ontology.classes.size
   const hasContent = classCount > 0
   const hasSelection = selectedNodeId !== null || selectedEdgeId !== null
 
   return (
-    <div className="flex h-full w-full">
-      {/* Graph Canvas - main area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex-1 relative">
+    <div className="flex flex-col h-full w-full">
+      <Toolbar onOpen={handleOpen} onSave={handleSave} onSaveAs={handleSaveAs} />
+
+      <ResizablePanelGroup orientation="horizontal" className="flex-1 overflow-hidden" id="main-layout">
+        {/* Graph Canvas - main area */}
+        <ResizablePanel id="graph-panel" defaultSize="70%" minSize="30%" order={1}>
           {hasContent ? (
             <GraphCanvas />
           ) : (
-            <div className="w-full h-full bg-[var(--graph-bg)] flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--graph-bg)' }}>
               <div className="text-center text-muted-foreground">
                 <h1 className="text-2xl font-semibold mb-2">Ontograph</h1>
                 <p className="text-sm mb-4">
@@ -112,40 +128,50 @@ function App(): React.JSX.Element {
               </div>
             </div>
           )}
-        </div>
+        </ResizablePanel>
 
-        <StatusBar />
-      </div>
+        <ResizableHandle />
+        <ResizablePanel
+          id="sidebar-panel"
+          defaultSize="30%"
+          minSize="15%"
+          maxSize="60%"
+          collapsible
+          collapsedSize={0}
+          panelRef={sidebarRef}
+          order={2}
+        >
+          <div className="h-full bg-card flex flex-col">
+            {/* Detail Panel (when something selected) */}
+            {hasSelection && (
+              <div className="border-b border-border overflow-y-auto max-h-[50%]">
+                <div className="px-3 py-2 border-b border-border bg-card sticky top-0">
+                  <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Properties
+                  </h2>
+                </div>
+                <DetailPanel />
+              </div>
+            )}
 
-      {/* Right Sidebar */}
-      <div className="w-80 border-l border-border bg-card flex flex-col shrink-0">
-        {/* Detail Panel (when something selected) */}
-        {hasSelection && (
-          <div className="border-b border-border overflow-y-auto max-h-[50%]">
-            <div className="px-3 py-2 border-b border-border bg-card sticky top-0">
-              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Properties
-              </h2>
-            </div>
-            <DetailPanel />
+            {/* Chat Panel */}
+            <ChatPanel />
+
+            {/* Validation Panel */}
+            {hasContent && (
+              <div className="border-t border-border">
+                <div className="px-3 py-2 border-b border-border">
+                  <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Validation
+                  </h2>
+                </div>
+                <ValidationPanel />
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Chat Panel */}
-        <ChatPanel />
-
-        {/* Validation Panel */}
-        {hasContent && (
-          <div className="border-t border-border">
-            <div className="px-3 py-2 border-b border-border">
-              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Validation
-              </h2>
-            </div>
-            <ValidationPanel />
-          </div>
-        )}
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+      <StatusBar />
     </div>
   )
 }

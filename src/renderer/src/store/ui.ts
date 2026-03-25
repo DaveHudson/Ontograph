@@ -7,11 +7,13 @@ interface UIState {
   selectedEdgeId: string | null
   theme: Theme
   chatOpen: boolean
+  sidebarVisible: boolean
 
   setSelectedNode: (id: string | null) => void
   setSelectedEdge: (id: string | null) => void
   toggleTheme: () => void
   setChatOpen: (open: boolean) => void
+  toggleSidebar: () => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -19,6 +21,7 @@ export const useUIStore = create<UIState>((set) => ({
   selectedEdgeId: null,
   theme: 'dark',
   chatOpen: true,
+  sidebarVisible: true,
 
   setSelectedNode: (id) => set({ selectedNodeId: id }),
   setSelectedEdge: (id) => set({ selectedEdgeId: id }),
@@ -28,5 +31,6 @@ export const useUIStore = create<UIState>((set) => ({
       document.documentElement.classList.toggle('dark', newTheme === 'dark')
       return { theme: newTheme }
     }),
-  setChatOpen: (open) => set({ chatOpen: open })
+  setChatOpen: (open) => set({ chatOpen: open }),
+  toggleSidebar: () => set((state) => ({ sidebarVisible: !state.sidebarVisible }))
 }))

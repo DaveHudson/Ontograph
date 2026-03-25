@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
+import { Streamdown } from 'streamdown'
+import { code } from '@streamdown/code'
 import { useClaude, type ChatMessage } from './useClaude'
 import { useUIStore } from '@renderer/store/ui'
 import { useOntologyStore } from '@renderer/store/ontology'
 
 export function ChatPanel(): React.JSX.Element {
   const {
-    messages, isLoading, authMode, setAuthMode, apiKey, setApiKey, cliDetected, isReady,
+    messages, isLoading, authMode, isReady,
     sendMessage, resetSession
   } = useClaude()
   const [input, setInput] = useState('')
-  const [showSettings, setShowSettings] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const selectedNodeId = useUIStore((s) => s.selectedNodeId)
@@ -46,10 +47,7 @@ export function ChatPanel(): React.JSX.Element {
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
-    if (!isReady) {
-      setShowSettings(true)
-      return
-    }
+    if (!isReady) return
     sendMessage(input.trim(), selectionContext?.contextString)
     setInput('')
   }
@@ -60,68 +58,16 @@ export function ChatPanel(): React.JSX.Element {
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           Claude
         </h2>
-        <div className="flex gap-1">
+        {messages.length > 0 && (
           <button
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={resetSession}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
-            title="Auth settings"
+            title="New conversation"
           >
-            {isReady ? '●' : '○'}
+            ↺
           </button>
-          {messages.length > 0 && (
-            <button
-              onClick={resetSession}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
-              title="New conversation"
-            >
-              ↺
-            </button>
-          )}
-        </div>
+        )}
       </div>
-
-      {/* Auth Settings */}
-      {showSettings && (
-        <div className="px-3 py-2 border-b border-border bg-secondary/50 space-y-2">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setAuthMode('max')}
-              className={`text-[10px] px-2 py-0.5 rounded ${authMode === 'max' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
-            >
-              Claude Max
-            </button>
-            <button
-              onClick={() => setAuthMode('api-key')}
-              className={`text-[10px] px-2 py-0.5 rounded ${authMode === 'api-key' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
-            >
-              API Key
-            </button>
-          </div>
-
-          {authMode === 'max' && (
-            <p className="text-[10px] text-muted-foreground">
-              {cliDetected
-                ? 'Claude CLI detected. Using your Max subscription.'
-                : 'Claude CLI not found. Install Claude Code and log in, or switch to API Key mode.'}
-            </p>
-          )}
-
-          {authMode === 'api-key' && (
-            <>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-..."
-                className="w-full bg-secondary text-xs rounded px-2 py-1 outline-none focus:ring-1 focus:ring-ring font-mono"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Stored locally. Used to call the Claude API directly.
-              </p>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -130,8 +76,8 @@ export function ChatPanel(): React.JSX.Element {
             {isReady
               ? 'Describe the ontology you want to create...'
               : authMode === 'max'
-                ? 'Claude CLI not detected. Check settings.'
-                : 'Set your API key to start chatting with Claude'}
+                ? 'Claude CLI not detected. Configure in toolbar.'
+                : 'Set your API key in the toolbar to start chatting'}
           </p>
         )}
         {messages.map((msg, i) => (
@@ -209,7 +155,7 @@ function MessageBubble({ message }: { message: ChatMessage }): React.JSX.Element
 
   return (
     <div className="text-sm text-foreground max-w-[95%] leading-relaxed">
-      {message.content}
+      <Streamdown plugins={{ code }}>{message.content}</Streamdown>
       {message.cost !== undefined && (
         <span className="text-[10px] text-muted-foreground ml-2">
           ${message.cost.toFixed(4)}
