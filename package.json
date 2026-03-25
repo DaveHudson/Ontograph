@@ -29,6 +29,7 @@
     "cytoscape": "^3.33.1",
     "cytoscape-node-html-label": "^1.2.2",
     "lucide-react": "^1.6.0",
+    "motion": "^12.38.0",
     "n3": "^2.0.3",
     "react": "^19.1.0",
     "react-cytoscapejs": "^2.0.0",

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import {
   Sun, Moon, Bot, FolderOpen, Save, SaveAll, PanelRight, ChevronDown, SlidersHorizontal
 } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useUIStore } from '@renderer/store/ui'
 import { useClaude } from '../chat/useClaude'
 import { GraphControlsPanel } from './GraphControlsPanel'
@@ -71,8 +72,16 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
           <ChevronDown size={12} />
         </button>
 
+        <AnimatePresence>
         {showClaudeMenu && (
-          <div className="absolute top-full left-0 mt-1 w-64 bg-popover border border-border rounded-lg shadow-lg p-3 space-y-2 z-50" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+          <motion.div
+            className="absolute top-full left-0 mt-1 w-64 bg-popover border border-border rounded-lg shadow-lg p-3 space-y-2 z-50"
+            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+          >
             <div className="flex gap-1">
               <button
                 onClick={() => setAuthMode('max')}
@@ -110,8 +119,9 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
                 </p>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
 
       <div className="w-px h-5 bg-border" />
@@ -126,9 +136,11 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
           <SlidersHorizontal size={16} />
           <ChevronDown size={12} />
         </button>
-        {showGraphControls && (
-          <GraphControlsPanel onClose={() => setShowGraphControls(false)} />
-        )}
+        <AnimatePresence>
+          {showGraphControls && (
+            <GraphControlsPanel onClose={() => setShowGraphControls(false)} />
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex-1 flex justify-center">

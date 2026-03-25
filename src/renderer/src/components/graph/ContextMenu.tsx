@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { motion } from 'motion/react'
 
 export interface ContextMenuItem {
   label: string
@@ -35,10 +36,14 @@ export function ContextMenu({ x, y, items, onClose }: Props): React.JSX.Element 
   }, [onClose])
 
   return (
-    <div
+    <motion.div
       ref={ref}
       className="fixed z-50 min-w-[160px] bg-popover border border-border rounded-lg shadow-lg py-1 text-sm"
       style={{ left: x, top: y }}
+      initial={{ opacity: 0, scale: 0.95, y: -4 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: -4 }}
+      transition={{ duration: 0.1, ease: 'easeOut' }}
     >
       {items.map((item, i) =>
         item.separator ? (
@@ -58,6 +63,6 @@ export function ContextMenu({ x, y, items, onClose }: Props): React.JSX.Element 
           </button>
         )
       )}
-    </div>
+    </motion.div>
   )
 }

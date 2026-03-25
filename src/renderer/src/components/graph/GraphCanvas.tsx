@@ -2,13 +2,15 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import cytoscape, { type Core, type EventObject } from 'cytoscape'
 // @ts-expect-error no types available
 import nodeHtmlLabel from 'cytoscape-node-html-label'
+import { AnimatePresence } from 'motion/react'
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import { useOntologyStore } from '@renderer/store/ontology'
 import { useUIStore } from '@renderer/store/ui'
 import { ontologyToCytoscapeElements } from '@renderer/model/cytoscape'
 import { getCytoscapeStylesheet } from './graph-styles'
 import { renderNodeHtml } from './node-renderer'
 import { getLayoutOptions } from './layout'
-import { setCyInstance } from './cyRef'
+import { setCyInstance, useCyStore } from './cyRef'
 import { useGraphFilters } from '@renderer/hooks/useGraphFilters'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 
@@ -182,21 +184,43 @@ export function GraphCanvas(): React.JSX.Element {
     return cleanup
   }, [initCytoscape])
 
+
+  const cy = useCyStore((s) => s.instance)
+
   return (
-    <>
+    <div className="relative w-full h-full">
       <div
         ref={containerRef}
         className={`w-full h-full${showDatatypeProperties ? '' : ' hide-dt-props'}`}
         style={{ background: 'var(--graph-bg)' }}
       />
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          items={contextMenu.items}
-          onClose={() => setContextMenu(null)}
-        />
-      )}
-    </>
+      <div className="absolute bottom-4 left-4 flex flex-col gap-1">
+        <ZoomButton icon={<ZoomIn size={14} />} title="Zoom in" onClick={() => cy?.animate({ zoom: { level: cy.zoom() * 1.3, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } } }, { duration: 200, easing: 'ease-in-out-cubic' })} />
+        <ZoomButton icon={<ZoomOut size={14} />} title="Zoom out" onClick={() => cy?.animate({ zoom: { level: cy.zoom() / 1.3, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } } }, { duration: 200, easing: 'ease-in-out-cubic' })} />
+        <ZoomButton icon={<Maximize2 size={14} />} title="Fit to screen" onClick={() => cy?.animate({ fit: { eles: cy.elements(), padding: 40 } }, { duration: 300, easing: 'ease-in-out-cubic' })} />
+      </div>
+      <AnimatePresence>
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            items={contextMenu.items}
+            onClose={() => setContextMenu(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function ZoomButton({ icon, title, onClick }: { icon: React.ReactNode; title: string; onClick: () => void }): React.JSX.Element {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className="p-1.5 rounded-md bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shadow-sm"
+    >
+      {icon}
+    </button>
   )
 }

@@ -1,4 +1,5 @@
 import { X, Maximize2, RefreshCw } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useUIStore } from '@renderer/store/ui'
 import { getCyInstance } from '@renderer/components/graph/cyRef'
 import { getLayoutOptions } from '@renderer/components/graph/layout'
@@ -28,9 +29,13 @@ export function GraphControlsPanel({ onClose }: Props): React.JSX.Element {
   }
 
   return (
-    <div
+    <motion.div
       className="absolute top-full left-0 mt-1 w-72 bg-popover border border-border rounded-lg shadow-lg z-50"
       style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
     >
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <span className="text-xs font-semibold text-foreground">Graph Controls</span>
@@ -122,7 +127,7 @@ export function GraphControlsPanel({ onClose }: Props): React.JSX.Element {
           <RefreshCw size={12} /> Reset
         </button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
