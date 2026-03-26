@@ -1,10 +1,11 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { query, tool, createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk'
 import { z } from 'zod/v4'
-import { execFile } from 'child_process'
+import { execFile, exec } from 'child_process'
 import { promisify } from 'util'
 
 const execFileAsync = promisify(execFile)
+const execAsync = promisify(exec)
 
 interface AuthConfig {
   mode: 'api-key' | 'max'
@@ -19,10 +20,20 @@ export function getDetectedClaudePath(): string | null {
 }
 
 async function detectClaudeCli(): Promise<{ installed: boolean; path: string | null }> {
+  if (process.platform === 'win32') {
+    try {
+      const { stdout } = await execFileAsync('where', ['claude'])
+      return { installed: true, path: stdout.trim().split('\n')[0] }
+    } catch {
+      return { installed: false, path: null }
+    }
+  }
+
+  // On macOS/Linux, packaged apps don't inherit the user's shell PATH.
+  // Run which inside a login shell to resolve the full PATH.
   try {
-    const { stdout } = await execFileAsync(process.platform === 'win32' ? 'where' : 'which', [
-      'claude'
-    ])
+    const shell = process.env.SHELL || '/bin/zsh'
+    const { stdout } = await execAsync(`${shell} -l -c 'which claude'`)
     const path = stdout.trim().split('\n')[0]
     return { installed: true, path }
   } catch {
