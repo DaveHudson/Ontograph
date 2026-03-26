@@ -1,15 +1,14 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { RotateCcw, BotMessageSquare } from 'lucide-react'
+import { RotateCcw, BotMessageSquare, ArrowUp, Square } from 'lucide-react'
 import { Streamdown } from 'streamdown'
 import { code } from '@streamdown/code'
 import { useClaude, type ChatMessage, type ModelId, type ThinkingBudget } from './useClaude'
 import { useUIStore } from '@renderer/store/ui'
 import { useOntologyStore } from '@renderer/store/ontology'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
 export function ChatPanel(): React.JSX.Element {
@@ -20,6 +19,14 @@ export function ChatPanel(): React.JSX.Element {
   } = useClaude()
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [input])
 
   const selectedNodeId = useUIStore((s) => s.selectedNodeId)
   const selectedEdgeId = useUIStore((s) => s.selectedEdgeId)
@@ -52,12 +59,19 @@ export function ChatPanel(): React.JSX.Element {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const handleSubmit = (e: React.FormEvent): void => {
-    e.preventDefault()
+  const handleSubmit = (e?: React.FormEvent): void => {
+    e?.preventDefault()
     if (!input.trim() || isLoading) return
     if (!isReady) return
     sendMessage(input.trim(), selectionContext?.contextString)
     setInput('')
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit()
+    }
   }
 
   return (
@@ -131,55 +145,78 @@ export function ChatPanel(): React.JSX.Element {
       )}
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-3 border-t border-border space-y-1.5">
-        <div className="flex gap-2">
-          <Input
+      <form onSubmit={handleSubmit} className="p-3 border-t border-border">
+        <div className={cn(
+          'rounded-xl border border-input bg-card transition-shadow',
+          'focus-within:ring-1 focus-within:ring-ring',
+          (!isReady || isLoading) && 'opacity-60'
+        )}>
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={isReady ? 'Describe your ontology...' : 'Configure auth first...'}
+            onKeyDown={handleKeyDown}
+            placeholder={isReady ? 'Ask anything...' : 'Configure auth first...'}
             disabled={!isReady || isLoading}
-            className="flex-1 text-sm"
+            rows={1}
+            className={cn(
+              'w-full resize-none bg-transparent px-3 pt-3 pb-2 text-sm',
+              'placeholder:text-muted-foreground focus:outline-none',
+              'disabled:cursor-not-allowed max-h-32 overflow-y-auto'
+            )}
           />
-          {isLoading && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => window.api.abortClaude()}
-              className="text-destructive hover:text-destructive/80 px-2 h-8"
-            >
-              Stop
-            </Button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Select value={model} onValueChange={(v) => setModel(v as ModelId)}>
-            <SelectTrigger className="w-28 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="claude-haiku-4-5-20251001">Haiku</SelectItem>
-              <SelectItem value="claude-sonnet-4-6">Sonnet</SelectItem>
-              <SelectItem value="claude-opus-4-6">Opus</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex gap-0.5">
-            {(['auto', 'low', 'med', 'high'] as ThinkingBudget[]).map((level) => (
-              <Button
-                key={level}
-                type="button"
-                variant="ghost"
-                onClick={() => setThinkingBudget(level)}
-                className={cn(
-                  'text-[11px] px-1.5 h-6 rounded',
-                  thinkingBudget === level
-                    ? 'bg-secondary text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {level}
-              </Button>
-            ))}
+          <div className="flex items-center gap-1.5 px-2 pb-2">
+            <Select value={model} onValueChange={(v) => setModel(v as ModelId)}>
+              <SelectTrigger className="w-24 h-7 text-xs border-0 bg-transparent shadow-none focus:ring-0 px-1.5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Model</SelectLabel>
+                  <SelectItem value="claude-haiku-4-5-20251001">Haiku</SelectItem>
+                  <SelectItem value="claude-sonnet-4-6">Sonnet</SelectItem>
+                  <SelectItem value="claude-opus-4-6">Opus</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Select value={thinkingBudget} onValueChange={(v) => setThinkingBudget(v as ThinkingBudget)}>
+              <SelectTrigger className="w-20 h-7 text-xs border-0 bg-transparent shadow-none focus:ring-0 px-1.5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Effort</SelectLabel>
+                  <SelectItem value="auto">Auto</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="med">Med</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <div className="ml-auto">
+              {isLoading ? (
+                <button
+                  type="button"
+                  onClick={() => window.api.abortClaude()}
+                  className="size-7 rounded-lg flex items-center justify-center bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                >
+                  <Square className="size-3.5 fill-current" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!isReady || !input.trim()}
+                  className={cn(
+                    'size-7 rounded-lg flex items-center justify-center transition-colors',
+                    isReady && input.trim()
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed'
+                  )}
+                >
+                  <ArrowUp className="size-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </form>

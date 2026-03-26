@@ -11,6 +11,8 @@ import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useOntologyStore } from './store/ontology'
 import { useUIStore } from './store/ui'
 import { useHistoryStore } from './store/history'
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from './components/ui/empty'
+import { MousePointer2 } from 'lucide-react'
 import peopleTtl from './samples/people.ttl?raw'
 
 function App(): React.JSX.Element {
@@ -114,9 +116,6 @@ function App(): React.JSX.Element {
   const hasContent = classCount > 0
   const hasSelection = selectedNodeId !== null || selectedEdgeId !== null
 
-  useEffect(() => {
-    if (hasSelection) setActiveTab('properties')
-  }, [hasSelection])
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -168,9 +167,17 @@ function App(): React.JSX.Element {
               {hasSelection ? (
                 <DetailPanel />
               ) : (
-                <div className="p-4 text-sm text-muted-foreground text-center mt-8">
-                  Select a node or edge to view properties
-                </div>
+                <Empty className="border-0 p-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MousePointer2 />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-sm font-medium">No selection</EmptyTitle>
+                    <EmptyDescription className="text-xs">
+                      Select a node or edge to view and edit its properties.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               )}
             </TabsContent>
             <TabsContent value="chat" className="flex-1 min-h-0 m-0 flex flex-col">
