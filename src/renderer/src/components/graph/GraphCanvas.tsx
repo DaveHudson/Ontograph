@@ -4,6 +4,7 @@ import cytoscape, { type Core, type EventObject } from 'cytoscape'
 import nodeHtmlLabel from 'cytoscape-node-html-label'
 import { AnimatePresence } from 'motion/react'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useOntologyStore } from '@renderer/store/ontology'
 import { useUIStore } from '@renderer/store/ui'
 import { ontologyToCytoscapeElements } from '@renderer/model/cytoscape'
@@ -238,9 +239,15 @@ export function GraphCanvas(): React.JSX.Element {
         style={{ background: 'var(--graph-bg)' }}
       />
       <div className="absolute bottom-4 left-4 flex flex-col gap-1">
-        <ZoomButton icon={<ZoomIn size={14} />} title="Zoom in" onClick={() => cy?.animate({ zoom: { level: cy.zoom() * 1.3, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } } }, { duration: 200, easing: 'ease-in-out-cubic' })} />
-        <ZoomButton icon={<ZoomOut size={14} />} title="Zoom out" onClick={() => cy?.animate({ zoom: { level: cy.zoom() / 1.3, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } } }, { duration: 200, easing: 'ease-in-out-cubic' })} />
-        <ZoomButton icon={<Maximize2 size={14} />} title="Fit to screen" onClick={() => cy?.animate({ fit: { eles: cy.elements(), padding: 40 } }, { duration: 300, easing: 'ease-in-out-cubic' })} />
+        <Button variant="outline" size="icon" className="size-7 bg-card/80 backdrop-blur-sm shadow-sm" title="Zoom in" onClick={() => cy?.animate({ zoom: { level: cy.zoom() * 1.3, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } } }, { duration: 200, easing: 'ease-in-out-cubic' })}>
+          <ZoomIn className="size-3.5" />
+        </Button>
+        <Button variant="outline" size="icon" className="size-7 bg-card/80 backdrop-blur-sm shadow-sm" title="Zoom out" onClick={() => cy?.animate({ zoom: { level: cy.zoom() / 1.3, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } } }, { duration: 200, easing: 'ease-in-out-cubic' })}>
+          <ZoomOut className="size-3.5" />
+        </Button>
+        <Button variant="outline" size="icon" className="size-7 bg-card/80 backdrop-blur-sm shadow-sm" title="Fit to screen" onClick={() => cy?.animate({ fit: { eles: cy.elements(), padding: 40 } }, { duration: 300, easing: 'ease-in-out-cubic' })}>
+          <Maximize2 className="size-3.5" />
+        </Button>
       </div>
       <AnimatePresence>
         {contextMenu && (
@@ -256,14 +263,3 @@ export function GraphCanvas(): React.JSX.Element {
   )
 }
 
-function ZoomButton({ icon, title, onClick }: { icon: React.ReactNode; title: string; onClick: () => void }): React.JSX.Element {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      className="p-1.5 rounded-md bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shadow-sm"
-    >
-      {icon}
-    </button>
-  )
-}

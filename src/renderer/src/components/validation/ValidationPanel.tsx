@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
+import { CircleAlert, TriangleAlert } from 'lucide-react'
 import { useOntologyStore } from '@renderer/store/ontology'
 import { useUIStore } from '@renderer/store/ui'
 import { validateOntology, type ValidationError } from '@renderer/services/validation'
+import { Button } from '@/components/ui/button'
 
 function localName(uri: string): string {
   const idx = Math.max(uri.lastIndexOf('#'), uri.lastIndexOf('/'))
@@ -36,25 +38,28 @@ export function ValidationPanel(): React.JSX.Element {
   return (
     <div className="text-xs">
       <div className="px-3 py-1.5 text-muted-foreground border-b border-border">
-        {errorCount > 0 && <span className="text-destructive-foreground">{errorCount} errors</span>}
+        {errorCount > 0 && <span className="text-destructive">{errorCount} errors</span>}
         {errorCount > 0 && warnCount > 0 && ' · '}
         {warnCount > 0 && <span>{warnCount} warnings</span>}
       </div>
       <div className="max-h-40 overflow-y-auto">
         {errors.map((error, i) => (
-          <button
+          <Button
             key={i}
+            variant="ghost"
+            className="w-full justify-start px-3 h-auto py-1.5 gap-2 items-start rounded-none text-xs font-normal"
             onClick={() => handleClick(error)}
-            className="w-full text-left px-3 py-1.5 hover:bg-accent transition-colors flex gap-2 items-start"
           >
-            <span className={error.severity === 'error' ? 'text-destructive-foreground' : 'text-yellow-500'}>
-              {error.severity === 'error' ? '●' : '▲'}
-            </span>
-            <span>
+            {error.severity === 'error' ? (
+              <CircleAlert className="size-3.5 shrink-0 mt-0.5 text-destructive" />
+            ) : (
+              <TriangleAlert className="size-3.5 shrink-0 mt-0.5 text-warning" />
+            )}
+            <span className="text-left">
               <span className="text-muted-foreground">{localName(error.elementUri)}:</span>{' '}
               {error.message}
             </span>
-          </button>
+          </Button>
         ))}
       </div>
     </div>

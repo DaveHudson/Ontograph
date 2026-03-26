@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import type { OntologyClass } from '@renderer/model/types'
+import type { OntologyClass, DatatypeProperty } from '@renderer/model/types'
 import { useOntologyStore } from '@renderer/store/ontology'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 
 interface Props {
   cls: OntologyClass
@@ -24,101 +26,43 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
   const updateClass = useOntologyStore((s) => s.updateClass)
   const updateDatatypeProperty = useOntologyStore((s) => s.updateDatatypeProperty)
   const ontology = useOntologyStore((s) => s.ontology)
-  const [editingLabel, setEditingLabel] = useState(false)
-  const [editingComment, setEditingComment] = useState(false)
-  const [labelValue, setLabelValue] = useState(cls.label || '')
-  const [commentValue, setCommentValue] = useState(cls.comment || '')
-  const [editingPropUri, setEditingPropUri] = useState<string | null>(null)
-  const [editingPropValue, setEditingPropValue] = useState('')
 
   const dtProps = Array.from(ontology.datatypeProperties.values()).filter((p) =>
     p.domain.includes(cls.uri)
   )
-
   const objProps = Array.from(ontology.objectProperties.values()).filter(
     (p) => p.domain.includes(cls.uri) || p.range.includes(cls.uri)
   )
 
   return (
-    <div className="p-3 space-y-3 text-sm">
+    <div className="p-3 space-y-4 text-sm">
       <div>
         <div className="text-xs text-muted-foreground mb-0.5">Class</div>
         <div className="font-medium">{localName(cls.uri)}</div>
         <div className="text-xs text-muted-foreground break-all mt-0.5">{cls.uri}</div>
       </div>
 
-      {/* Label */}
-      <div>
-        <div className="text-xs text-muted-foreground mb-0.5">Label</div>
-        {editingLabel ? (
-          <input
-            autoFocus
-            value={labelValue}
-            onChange={(e) => setLabelValue(e.target.value)}
-            onBlur={() => {
-              updateClass(cls.uri, { label: labelValue || undefined })
-              setEditingLabel(false)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                updateClass(cls.uri, { label: labelValue || undefined })
-                setEditingLabel(false)
-              }
-              if (e.key === 'Escape') {
-                setLabelValue(cls.label || '')
-                setEditingLabel(false)
-              }
-            }}
-            className="w-full bg-secondary rounded px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-ring"
-          />
-        ) : (
-          <div
-            onClick={() => {
-              setLabelValue(cls.label || '')
-              setEditingLabel(true)
-            }}
-            className="cursor-pointer hover:bg-secondary rounded px-2 py-1 -mx-2"
-          >
-            {cls.label || <span className="text-muted-foreground italic">No label</span>}
-          </div>
-        )}
+      <div className="space-y-1.5">
+        <Label htmlFor="cls-label">Label</Label>
+        <Input
+          id="cls-label"
+          defaultValue={cls.label || ''}
+          onBlur={(e) => updateClass(cls.uri, { label: e.target.value || undefined })}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+        />
       </div>
 
-      {/* Comment */}
-      <div>
-        <div className="text-xs text-muted-foreground mb-0.5">Comment</div>
-        {editingComment ? (
-          <textarea
-            autoFocus
-            value={commentValue}
-            onChange={(e) => setCommentValue(e.target.value)}
-            onBlur={() => {
-              updateClass(cls.uri, { comment: commentValue || undefined })
-              setEditingComment(false)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setCommentValue(cls.comment || '')
-                setEditingComment(false)
-              }
-            }}
-            rows={3}
-            className="w-full bg-secondary rounded px-2 py-1 text-sm outline-none resize-none focus:ring-1 focus:ring-ring"
-          />
-        ) : (
-          <div
-            onClick={() => {
-              setCommentValue(cls.comment || '')
-              setEditingComment(true)
-            }}
-            className="cursor-pointer hover:bg-secondary rounded px-2 py-1 -mx-2 text-xs"
-          >
-            {cls.comment || <span className="text-muted-foreground italic">No comment</span>}
-          </div>
-        )}
+      <div className="space-y-1.5">
+        <Label htmlFor="cls-comment">Comment</Label>
+        <Textarea
+          id="cls-comment"
+          defaultValue={cls.comment || ''}
+          onBlur={(e) => updateClass(cls.uri, { comment: e.target.value || undefined })}
+          rows={3}
+          className="resize-none"
+        />
       </div>
 
-      {/* SubClassOf */}
       {cls.subClassOf.length > 0 && (
         <div>
           <div className="text-xs text-muted-foreground mb-1">Inherits from</div>
@@ -132,60 +76,20 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
         </div>
       )}
 
-      {/* Datatype Properties */}
       {dtProps.length > 0 && (
-        <div>
-          <div className="text-xs text-muted-foreground mb-1">Datatype Properties</div>
-          <div className="space-y-0.5">
-            {dtProps.map((p) => (
-              <div key={p.uri} className="flex justify-between items-center text-xs bg-secondary rounded px-2 py-1">
-                {editingPropUri === p.uri ? (
-                  <input
-                    autoFocus
-                    value={editingPropValue}
-                    onChange={(e) => setEditingPropValue(e.target.value)}
-                    onBlur={() => {
-                      updateDatatypeProperty(p.uri, { label: editingPropValue || undefined })
-                      setEditingPropUri(null)
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        updateDatatypeProperty(p.uri, { label: editingPropValue || undefined })
-                        setEditingPropUri(null)
-                      }
-                      if (e.key === 'Escape') {
-                        setEditingPropUri(null)
-                      }
-                    }}
-                    className="flex-1 bg-background rounded px-1 outline-none focus:ring-1 focus:ring-ring"
-                  />
-                ) : (
-                  <span
-                    onClick={() => { setEditingPropUri(p.uri); setEditingPropValue(p.label || localName(p.uri)) }}
-                    className="cursor-pointer hover:text-foreground"
-                  >
-                    {p.label || localName(p.uri)}
-                  </span>
-                )}
-                <select
-                  value={p.range}
-                  onChange={(e) => updateDatatypeProperty(p.uri, { range: e.target.value })}
-                  className="ml-2 shrink-0 bg-background text-muted-foreground font-mono text-xs rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-ring cursor-pointer"
-                >
-                  {XSD_TYPES.map((t) => (
-                    <option key={t} value={`${XSD}${t}`}>{t}</option>
-                  ))}
-                  {!p.range.startsWith(XSD) && (
-                    <option value={p.range}>{localName(p.range)}</option>
-                  )}
-                </select>
-              </div>
-            ))}
-          </div>
+        <div className="space-y-2">
+          <div className="text-xs text-muted-foreground">Datatype Properties</div>
+          {dtProps.map((p) => (
+            <DatatypePropertyRow
+              key={p.uri}
+              property={p}
+              onLabelBlur={(label) => updateDatatypeProperty(p.uri, { label: label || undefined })}
+              onRangeChange={(range) => updateDatatypeProperty(p.uri, { range })}
+            />
+          ))}
         </div>
       )}
 
-      {/* Object Properties */}
       {objProps.length > 0 && (
         <div>
           <div className="text-xs text-muted-foreground mb-1">Relationships</div>
@@ -210,6 +114,41 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function DatatypePropertyRow({
+  property,
+  onLabelBlur,
+  onRangeChange,
+}: {
+  property: DatatypeProperty
+  onLabelBlur: (label: string) => void
+  onRangeChange: (range: string) => void
+}): React.JSX.Element {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2">
+        <Input
+          defaultValue={property.label || localName(property.uri)}
+          onBlur={(e) => onLabelBlur(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+          className="h-8 text-xs flex-1"
+        />
+        <select
+          value={property.range}
+          onChange={(e) => onRangeChange(e.target.value)}
+          className="shrink-0 bg-background text-muted-foreground font-mono text-xs rounded-md border border-input px-2 py-1.5 outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+        >
+          {XSD_TYPES.map((t) => (
+            <option key={t} value={`${XSD}${t}`}>{t}</option>
+          ))}
+          {!property.range.startsWith(XSD) && (
+            <option value={property.range}>{localName(property.range)}</option>
+          )}
+        </select>
+      </div>
     </div>
   )
 }

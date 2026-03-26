@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
+import { RotateCcw } from 'lucide-react'
 import { Streamdown } from 'streamdown'
 import { code } from '@streamdown/code'
 import { useClaude, type ChatMessage, type ModelId, type ThinkingBudget } from './useClaude'
 import { useUIStore } from '@renderer/store/ui'
 import { useOntologyStore } from '@renderer/store/ontology'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 export function ChatPanel(): React.JSX.Element {
   const {
@@ -60,13 +66,15 @@ export function ChatPanel(): React.JSX.Element {
           Claude
         </h2>
         {messages.length > 0 && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
             onClick={resetSession}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
             title="New conversation"
           >
-            ↺
-          </button>
+            <RotateCcw className="size-3.5" />
+          </Button>
         )}
       </div>
 
@@ -96,7 +104,7 @@ export function ChatPanel(): React.JSX.Element {
       {/* Selection Context Badge */}
       {selectionContext && (
         <div className="px-3 pt-2">
-          <div className="inline-flex items-center gap-1.5 bg-secondary text-xs rounded-full px-2.5 py-1 max-w-full">
+          <Badge variant="secondary" className="inline-flex gap-1.5 px-2.5 py-1 rounded-full max-w-full text-xs font-normal h-auto">
             <span className="text-muted-foreground">{selectionContext.type === 'class' ? '◆' : '→'}</span>
             <span className="truncate text-foreground">{selectionContext.label}</span>
             <button
@@ -105,55 +113,59 @@ export function ChatPanel(): React.JSX.Element {
             >
               ×
             </button>
-          </div>
+          </Badge>
         </div>
       )}
 
       {/* Input */}
       <form onSubmit={handleSubmit} className="p-3 border-t border-border space-y-1.5">
         <div className="flex gap-2">
-          <input
-            type="text"
+          <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={isReady ? 'Describe your ontology...' : 'Configure auth first...'}
             disabled={!isReady || isLoading}
-            className="flex-1 bg-secondary text-sm rounded-md px-3 py-1.5 outline-none placeholder:text-muted-foreground disabled:opacity-50 focus:ring-1 focus:ring-ring"
+            className="flex-1 text-sm"
           />
           {isLoading && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => window.api.abortClaude()}
-              className="text-xs text-destructive-foreground hover:opacity-80 px-2"
+              className="text-destructive hover:text-destructive/80 px-2 h-8"
             >
               Stop
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <select
-            value={model}
-            onChange={(e) => setModel(e.target.value as ModelId)}
-            className="text-[11px] bg-secondary text-muted-foreground rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-ring cursor-pointer hover:text-foreground transition-colors"
-          >
-            <option value="claude-haiku-4-5-20251001">Haiku</option>
-            <option value="claude-sonnet-4-6">Sonnet</option>
-            <option value="claude-opus-4-6">Opus</option>
-          </select>
+          <Select value={model} onValueChange={(v) => setModel(v as ModelId)}>
+            <SelectTrigger className="w-28 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="claude-haiku-4-5-20251001">Haiku</SelectItem>
+              <SelectItem value="claude-sonnet-4-6">Sonnet</SelectItem>
+              <SelectItem value="claude-opus-4-6">Opus</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="flex gap-0.5">
             {(['auto', 'low', 'med', 'high'] as ThinkingBudget[]).map((level) => (
-              <button
+              <Button
                 key={level}
                 type="button"
+                variant="ghost"
                 onClick={() => setThinkingBudget(level)}
-                className={`text-[11px] px-1.5 py-0.5 rounded transition-colors ${
+                className={cn(
+                  'text-[11px] px-1.5 h-6 rounded',
                   thinkingBudget === level
                     ? 'bg-secondary text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                )}
               >
                 {level}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

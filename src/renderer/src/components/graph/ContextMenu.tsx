@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { motion } from 'motion/react'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 
 export interface ContextMenuItem {
   label: string
@@ -47,20 +49,19 @@ export function ContextMenu({ x, y, items, onClose }: Props): React.JSX.Element 
     >
       {items.map((item, i) =>
         item.separator ? (
-          <div key={i} className="h-px bg-border my-1" />
+          <Separator key={i} className="my-1" />
         ) : (
-          <button
+          <Button
             key={i}
+            variant="ghost"
+            className={`w-full justify-start px-3 h-8 rounded-none text-sm font-normal ${item.destructive ? 'text-destructive-foreground hover:text-destructive-foreground' : ''}`}
             onClick={() => {
               item.action()
               onClose()
             }}
-            className={`w-full text-left px-3 py-1.5 hover:bg-accent transition-colors ${
-              item.destructive ? 'text-destructive-foreground' : ''
-            }`}
           >
             {item.label}
-          </button>
+          </Button>
         )
       )}
     </motion.div>

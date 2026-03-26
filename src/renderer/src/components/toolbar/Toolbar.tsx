@@ -1,12 +1,17 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Sun, Moon, Bot, FolderOpen, Save, SaveAll, PanelRight, ChevronDown, SlidersHorizontal
 } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence } from 'motion/react'
 import { useUIStore } from '@renderer/store/ui'
 import { useClaude } from '../chat/useClaude'
 import { GraphControlsPanel } from './GraphControlsPanel'
 import { GraphSearchBar } from './GraphSearchBar'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 
 interface ToolbarProps {
   onOpen: () => void
@@ -22,170 +27,119 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
 
   const { authMode, setAuthMode, apiKey, setApiKey, cliDetected, isReady } = useClaude()
 
-  const [showClaudeMenu, setShowClaudeMenu] = useState(false)
-  const claudeMenuRef = useRef<HTMLDivElement>(null)
   const [showGraphControls, setShowGraphControls] = useState(false)
-  const graphControlsRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!showClaudeMenu) return
-    function handleClickOutside(e: MouseEvent): void {
-      if (claudeMenuRef.current && !claudeMenuRef.current.contains(e.target as Node)) {
-        setShowClaudeMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showClaudeMenu])
-
-  useEffect(() => {
-    if (!showGraphControls) return
-    function handleClickOutside(e: MouseEvent): void {
-      if (graphControlsRef.current && !graphControlsRef.current.contains(e.target as Node)) {
-        setShowGraphControls(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showGraphControls])
 
   return (
     <div className="h-10 border-b border-border bg-card/80 backdrop-blur-sm flex items-center gap-1 shrink-0 app-drag-region relative z-50" style={{ paddingLeft: 78, paddingRight: 12 }}>
       {/* macOS traffic lights occupy ~78px */}
 
       {/* File ops */}
-      <ToolbarButton icon={<FolderOpen size={16} />} title="Open (⌘O)" onClick={onOpen} />
-      <ToolbarButton icon={<Save size={16} />} title="Save (⌘S)" onClick={onSave} />
-      <ToolbarButton icon={<SaveAll size={16} />} title="Save As (⇧⌘S)" onClick={onSaveAs} />
+      <Button variant="ghost" size="icon" className="size-8" title="Open (⌘O)" onClick={onOpen}>
+        <FolderOpen />
+      </Button>
+      <Button variant="ghost" size="icon" className="size-8" title="Save (⌘S)" onClick={onSave}>
+        <Save />
+      </Button>
+      <Button variant="ghost" size="icon" className="size-8" title="Save As (⇧⌘S)" onClick={onSaveAs}>
+        <SaveAll />
+      </Button>
 
-      <div className="w-px h-5 bg-border" />
+      <Separator orientation="vertical" className="h-5 mx-1" />
 
       {/* Claude auth */}
-      <div className="relative" ref={claudeMenuRef}>
-        <button
-          onClick={() => setShowClaudeMenu(!showClaudeMenu)}
-          className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          title="Claude settings"
-        >
-          <Bot size={16} />
-          <span className={`w-1.5 h-1.5 rounded-full ${isReady ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
-          <ChevronDown size={12} />
-        </button>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" className="h-8 px-2 gap-1.5 text-muted-foreground" title="Claude settings">
+            <Bot className="size-4" />
+            <span className={cn('size-1.5 rounded-full', isReady ? 'bg-success' : 'bg-muted-foreground/40')} />
+            <ChevronDown className="size-3" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3 space-y-2" align="start">
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant={authMode === 'max' ? 'default' : 'secondary'}
+              onClick={() => setAuthMode('max')}
+              className="text-xs h-7 flex-1"
+            >
+              Claude Max
+            </Button>
+            <Button
+              size="sm"
+              variant={authMode === 'api-key' ? 'default' : 'secondary'}
+              onClick={() => setAuthMode('api-key')}
+              className="text-xs h-7 flex-1"
+            >
+              API Key
+            </Button>
+          </div>
 
-        <AnimatePresence>
-        {showClaudeMenu && (
-          <motion.div
-            className="absolute top-full left-0 mt-1 w-64 bg-popover border border-border rounded-lg shadow-lg p-3 space-y-2 z-50"
-            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-          >
-            <div className="flex gap-1">
-              <button
-                onClick={() => setAuthMode('max')}
-                className={`text-xs px-2.5 py-1 rounded-md transition-colors ${authMode === 'max' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
-              >
-                Claude Max
-              </button>
-              <button
-                onClick={() => setAuthMode('api-key')}
-                className={`text-xs px-2.5 py-1 rounded-md transition-colors ${authMode === 'api-key' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
-              >
-                API Key
-              </button>
-            </div>
+          {authMode === 'max' && (
+            <p className="text-xs text-muted-foreground">
+              {cliDetected
+                ? '✓ Claude CLI detected. Using your Max subscription.'
+                : '✗ Claude CLI not found. Install Claude Code and log in.'}
+            </p>
+          )}
 
-            {authMode === 'max' && (
-              <p className="text-xs text-muted-foreground">
-                {cliDetected
-                  ? '✓ Claude CLI detected. Using your Max subscription.'
-                  : '✗ Claude CLI not found. Install Claude Code and log in.'}
+          {authMode === 'api-key' && (
+            <div className="space-y-1.5">
+              <Input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-ant-..."
+                className="h-8 text-xs font-mono"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Stored locally. Used to call the Claude API directly.
               </p>
-            )}
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
 
-            {authMode === 'api-key' && (
-              <div className="space-y-1.5">
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-ant-..."
-                  className="w-full bg-secondary text-xs rounded-md px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-ring font-mono"
-                />
-                <p className="text-[10px] text-muted-foreground">
-                  Stored locally. Used to call the Claude API directly.
-                </p>
-              </div>
-            )}
-          </motion.div>
-        )}
-        </AnimatePresence>
-      </div>
-
-      <div className="w-px h-5 bg-border" />
+      <Separator orientation="vertical" className="h-5 mx-1" />
 
       {/* Graph controls */}
-      <div className="relative" ref={graphControlsRef}>
-        <button
-          onClick={() => setShowGraphControls(!showGraphControls)}
-          className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          title="Graph controls"
-        >
-          <SlidersHorizontal size={16} />
-          <ChevronDown size={12} />
-        </button>
-        <AnimatePresence>
-          {showGraphControls && (
-            <GraphControlsPanel onClose={() => setShowGraphControls(false)} />
-          )}
-        </AnimatePresence>
-      </div>
+      <Popover open={showGraphControls} onOpenChange={setShowGraphControls}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" className="h-8 px-2 gap-1.5 text-muted-foreground" title="Graph controls">
+            <SlidersHorizontal className="size-4" />
+            <ChevronDown className="size-3" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 w-72" align="start">
+          <AnimatePresence>
+            {showGraphControls && (
+              <GraphControlsPanel onClose={() => setShowGraphControls(false)} />
+            )}
+          </AnimatePresence>
+        </PopoverContent>
+      </Popover>
 
       <div className="flex-1 flex justify-center">
         <GraphSearchBar />
       </div>
 
       {/* Theme toggle */}
-      <ToolbarButton
-        icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-        title="Toggle theme"
-        onClick={toggleTheme}
-      />
+      <Button variant="ghost" size="icon" className="size-8" title="Toggle theme" onClick={toggleTheme}>
+        {theme === 'dark' ? <Sun /> : <Moon />}
+      </Button>
 
-      <div className="w-px h-5 bg-border" />
+      <Separator orientation="vertical" className="h-5 mx-1" />
 
       {/* Sidebar toggle */}
-      <ToolbarButton
-        icon={<PanelRight size={16} />}
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn('size-8', sidebarVisible && 'text-foreground bg-secondary')}
         title="Toggle sidebar"
         onClick={toggleSidebar}
-        active={sidebarVisible}
-      />
+      >
+        <PanelRight />
+      </Button>
     </div>
-  )
-}
-
-function ToolbarButton({
-  icon, title, onClick, active
-}: {
-  icon: React.ReactNode
-  title: string
-  onClick: () => void
-  active?: boolean
-}): React.JSX.Element {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      className={`p-1.5 rounded-md transition-colors ${
-        active
-          ? 'text-foreground bg-secondary'
-          : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-      }`}
-    >
-      {icon}
-    </button>
   )
 }

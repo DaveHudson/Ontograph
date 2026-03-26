@@ -5,6 +5,8 @@ import { ChatPanel } from './components/chat/ChatPanel'
 import { StatusBar } from './components/status-bar/StatusBar'
 import { Toolbar } from './components/toolbar/Toolbar'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './components/ui/resizable'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
+import { Button } from './components/ui/button'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useOntologyStore } from './store/ontology'
 import { useUIStore } from './store/ui'
@@ -124,12 +126,9 @@ function App(): React.JSX.Element {
                 <p className="text-sm mb-4">
                   Open a .ttl file or start chatting with Claude to create an ontology
                 </p>
-                <button
-                  onClick={() => loadFromTurtle(peopleTtl, 'Sample: people.ttl')}
-                  className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
-                >
+                <Button onClick={() => loadFromTurtle(peopleTtl, 'Sample: people.ttl')}>
                   Load sample ontology
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -146,40 +145,30 @@ function App(): React.JSX.Element {
           panelRef={sidebarRef}
           order={2}
         >
-          <div className="h-full bg-card flex flex-col">
-            {/* Tab bar */}
-            <div className="flex items-center justify-center px-3 py-2 border-b border-border shrink-0">
-              <span className="isolate inline-flex rounded-md shadow-xs">
-                <button
-                  onClick={() => setActiveTab('properties')}
-                  className={`relative inline-flex items-center rounded-l-md px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ring-border transition-colors focus:z-10 ${activeTab === 'properties' ? 'bg-accent text-accent-foreground' : 'bg-card text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
-                >
-                  Properties
-                </button>
-                <button
-                  onClick={() => setActiveTab('chat')}
-                  className={`relative -ml-px inline-flex items-center rounded-r-md px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ring-border transition-colors focus:z-10 ${activeTab === 'chat' ? 'bg-accent text-accent-foreground' : 'bg-card text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
-                >
-                  Chat
-                </button>
-              </span>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as 'properties' | 'chat')}
+            className="h-full bg-card flex flex-col"
+          >
+            <div className="px-3 py-2 border-b border-border shrink-0 flex justify-center">
+              <TabsList>
+                <TabsTrigger value="properties" className="text-xs">Properties</TabsTrigger>
+                <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
+              </TabsList>
             </div>
-
-            {/* Tab content */}
-            {activeTab === 'properties' ? (
-              <div className="flex-1 overflow-y-auto">
-                {hasSelection ? (
-                  <DetailPanel />
-                ) : (
-                  <div className="p-4 text-sm text-muted-foreground text-center mt-8">
-                    Select a node or edge to view properties
-                  </div>
-                )}
-              </div>
-            ) : (
+            <TabsContent value="properties" className="flex-1 overflow-y-auto m-0">
+              {hasSelection ? (
+                <DetailPanel />
+              ) : (
+                <div className="p-4 text-sm text-muted-foreground text-center mt-8">
+                  Select a node or edge to view properties
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="chat" className="flex-1 min-h-0 m-0 flex flex-col">
               <ChatPanel />
-            )}
-          </div>
+            </TabsContent>
+          </Tabs>
         </ResizablePanel>
       </ResizablePanelGroup>
       <StatusBar />

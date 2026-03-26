@@ -1,9 +1,12 @@
-import { useMemo, useState, useRef, useEffect } from 'react'
+import { useMemo, useState } from 'react'
+import { CircleAlert, TriangleAlert } from 'lucide-react'
 import { useOntologyStore } from '@renderer/store/ontology'
 import { useUIStore } from '@renderer/store/ui'
 import { serializeToTurtle } from '@renderer/model/serialize'
 import { estimateTokenCount } from '@renderer/services/tokens'
 import { validateOntology, type ValidationError } from '@renderer/services/validation'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 
 function localName(uri: string): string {
   const idx = Math.max(uri.lastIndexOf('#'), uri.lastIndexOf('/'))
@@ -31,24 +34,6 @@ export function StatusBar(): React.JSX.Element {
   const warnCount = errors.filter((e) => e.severity === 'warning').length
 
   const [popoverOpen, setPopoverOpen] = useState(false)
-  const popoverRef = useRef<HTMLDivElement>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (!popoverOpen) return
-    function handleClick(e: MouseEvent): void {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(e.target as Node)
-      ) {
-        setPopoverOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [popoverOpen])
 
   function handleErrorClick(error: ValidationError): void {
     if (error.elementType === 'class') {
@@ -67,44 +52,38 @@ export function StatusBar(): React.JSX.Element {
 
       <span className="ml-auto flex items-center gap-4">
         {!hasIssues && classCount > 0 && (
-          <span className="text-green-700/50 dark:text-green-500/40">No issues</span>
+          <span className="text-success/60">No issues</span>
         )}
 
         {hasIssues && (
-          <span className="relative">
-            <button
-              ref={buttonRef}
-              onClick={() => setPopoverOpen((v) => !v)}
-              className="text-red-500 hover:text-red-400 transition-colors cursor-pointer font-medium"
-            >
-              {errorCount > 0 && `${errorCount} error${errorCount !== 1 ? 's' : ''}`}
-              {errorCount > 0 && warnCount > 0 && ' · '}
-              {warnCount > 0 && `${warnCount} warning${warnCount !== 1 ? 's' : ''}`}
-            </button>
-
-            {popoverOpen && (
-              <div
-                ref={popoverRef}
-                className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-80 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden"
-              >
-                {errors.map((error, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleErrorClick(error)}
-                    className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex gap-2 items-start border-b border-border last:border-0"
-                  >
-                    <span className={error.severity === 'error' ? 'text-destructive' : 'text-yellow-500'}>
-                      {error.severity === 'error' ? '●' : '▲'}
-                    </span>
-                    <span className="text-xs leading-relaxed">
-                      <span className="text-muted-foreground font-medium">{localName(error.elementUri)}:</span>{' '}
-                      <span className="text-foreground">{error.message}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </span>
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-destructive font-medium hover:text-destructive/80">
+                {errorCount > 0 && `${errorCount} error${errorCount !== 1 ? 's' : ''}`}
+                {errorCount > 0 && warnCount > 0 && ' · '}
+                {warnCount > 0 && `${warnCount} warning${warnCount !== 1 ? 's' : ''}`}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 w-80" side="top" align="end">
+              {errors.map((error, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleErrorClick(error)}
+                  className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex gap-2 items-start border-b border-border last:border-0 text-xs"
+                >
+                  {error.severity === 'error' ? (
+                    <CircleAlert className="size-3.5 shrink-0 mt-0.5 text-destructive" />
+                  ) : (
+                    <TriangleAlert className="size-3.5 shrink-0 mt-0.5 text-warning" />
+                  )}
+                  <span className="leading-relaxed">
+                    <span className="text-muted-foreground font-medium">{localName(error.elementUri)}:</span>{' '}
+                    <span className="text-foreground">{error.message}</span>
+                  </span>
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
         )}
 
         <span>{classCount} classes &middot; {propCount} properties &middot; {tokenDisplay}</span>

@@ -10,7 +10,7 @@ export function DetailPanel(): React.JSX.Element | null {
 
   if (selectedNodeId) {
     const cls = ontology.classes.get(selectedNodeId)
-    if (cls) return <ClassDetail cls={cls} />
+    if (cls) return <ClassDetail key={cls.uri} cls={cls} />
   }
 
   if (selectedEdgeId) {
