@@ -21,6 +21,26 @@ export function ChatPanel(): React.JSX.Element {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  const chatDraft = useUIStore((s) => s.chatDraft)
+  const setChatDraft = useUIStore((s) => s.setChatDraft)
+  const pendingChatMessage = useUIStore((s) => s.pendingChatMessage)
+  const setPendingChatMessage = useUIStore((s) => s.setPendingChatMessage)
+
+  useEffect(() => {
+    if (chatDraft) {
+      setInput(chatDraft)
+      setChatDraft('')
+      textareaRef.current?.focus()
+    }
+  }, [chatDraft, setChatDraft])
+
+  useEffect(() => {
+    if (pendingChatMessage && !isLoading && isReady) {
+      sendMessage(pendingChatMessage.message, pendingChatMessage.context)
+      setPendingChatMessage(null)
+    }
+  }, [pendingChatMessage, isLoading, isReady, sendMessage, setPendingChatMessage])
+
   useEffect(() => {
     const el = textareaRef.current
     if (!el) return

@@ -26,6 +26,8 @@ const DEFAULT_LAYOUT: GraphLayout = {
   nodeSpacing: 180
 }
 
+export type SidebarTab = 'properties' | 'chat' | 'eval'
+
 interface UIState {
   selectedNodeId: string | null
   selectedEdgeId: string | null
@@ -35,6 +37,8 @@ interface UIState {
   graphFilters: GraphFilters
   graphLayout: GraphLayout
   focusNodeId: string | null
+  sidebarTab: SidebarTab
+  chatDraft: string
 
   setSelectedNode: (id: string | null) => void
   setSelectedEdge: (id: string | null) => void
@@ -45,6 +49,10 @@ interface UIState {
   setGraphLayout: (patch: Partial<GraphLayout>) => void
   resetGraphControls: () => void
   setFocusNode: (id: string | null) => void
+  setSidebarTab: (tab: SidebarTab) => void
+  setChatDraft: (draft: string) => void
+  pendingChatMessage: { message: string; context: string } | null
+  setPendingChatMessage: (msg: { message: string; context: string } | null) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -56,6 +64,9 @@ export const useUIStore = create<UIState>((set) => ({
   graphFilters: { ...DEFAULT_FILTERS },
   graphLayout: { ...DEFAULT_LAYOUT },
   focusNodeId: null,
+  sidebarTab: 'chat',
+  chatDraft: '',
+  pendingChatMessage: null,
 
   setSelectedNode: (id) => set({ selectedNodeId: id }),
   setSelectedEdge: (id) => set({ selectedEdgeId: id }),
@@ -70,5 +81,8 @@ export const useUIStore = create<UIState>((set) => ({
   setGraphFilter: (patch) => set((s) => ({ graphFilters: { ...s.graphFilters, ...patch } })),
   setGraphLayout: (patch) => set((s) => ({ graphLayout: { ...s.graphLayout, ...patch } })),
   resetGraphControls: () => set({ graphFilters: { ...DEFAULT_FILTERS }, graphLayout: { ...DEFAULT_LAYOUT } }),
-  setFocusNode: (id) => set({ focusNodeId: id })
+  setFocusNode: (id) => set({ focusNodeId: id }),
+  setSidebarTab: (tab) => set({ sidebarTab: tab }),
+  setChatDraft: (draft) => set({ chatDraft: draft }),
+  setPendingChatMessage: (msg) => set({ pendingChatMessage: msg })
 }))

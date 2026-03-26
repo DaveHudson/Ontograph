@@ -14,6 +14,10 @@ interface AuthConfig {
 
 let detectedClaudePath: string | null = null
 
+export function getDetectedClaudePath(): string | null {
+  return detectedClaudePath
+}
+
 async function detectClaudeCli(): Promise<{ installed: boolean; path: string | null }> {
   try {
     const { stdout } = await execFileAsync(process.platform === 'win32' ? 'where' : 'which', [

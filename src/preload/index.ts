@@ -64,6 +64,20 @@ const api = {
   onClaudeValidate: (callback: () => void) =>
     onChannel('claude:validate', callback),
 
+  // Eval operations
+  runEval: (payload: {
+    turtle: string
+    domain: string
+    intendedUse: string
+    auth: { mode: 'api-key'; key: string } | { mode: 'max' }
+    model: string
+    effort: string
+  }): Promise<void> => ipcRenderer.invoke('eval:run', payload),
+  abortEval: (): Promise<void> => ipcRenderer.invoke('eval:abort'),
+  onEvalText: (callback: Callback<[string]>) => onChannel('eval:text', callback),
+  onEvalResult: (callback: Callback<[string]>) => onChannel('eval:result', callback),
+  onEvalError: (callback: Callback<[string]>) => onChannel('eval:error', callback),
+
   // Respond to main process requests
   respondOntology: (turtle: string): void => {
     ipcRenderer.invoke('claude:ontology-response', { turtle })

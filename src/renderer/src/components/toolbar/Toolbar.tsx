@@ -1,11 +1,8 @@
-import { useState } from 'react'
 import {
-  Sun, Moon, Bot, FolderOpen, Save, SaveAll, PanelRight, ChevronDown, SlidersHorizontal
+  Sun, Moon, Bot, FilePlus, FolderOpen, Save, SaveAll, PanelRight, ChevronDown
 } from 'lucide-react'
-import { AnimatePresence } from 'motion/react'
 import { useUIStore } from '@renderer/store/ui'
 import { useClaude } from '../chat/useClaude'
-import { GraphControlsPanel } from './GraphControlsPanel'
 import { GraphSearchBar } from './GraphSearchBar'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -14,12 +11,13 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 interface ToolbarProps {
+  onNew: () => void
   onOpen: () => void
   onSave: () => void
   onSaveAs: () => void
 }
 
-export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.Element {
+export function Toolbar({ onNew, onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.Element {
   const theme = useUIStore((s) => s.theme)
   const toggleTheme = useUIStore((s) => s.toggleTheme)
   const sidebarVisible = useUIStore((s) => s.sidebarVisible)
@@ -27,13 +25,14 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
 
   const { authMode, setAuthMode, apiKey, setApiKey, cliDetected, isReady } = useClaude()
 
-  const [showGraphControls, setShowGraphControls] = useState(false)
-
   return (
     <div className="h-10 border-b border-border bg-card/80 backdrop-blur-sm flex items-center gap-1 shrink-0 app-drag-region relative z-50" style={{ paddingLeft: 78, paddingRight: 12 }}>
       {/* macOS traffic lights occupy ~78px */}
 
       {/* File ops */}
+      <Button variant="ghost" size="icon" className="size-8" title="New ontology" onClick={onNew}>
+        <FilePlus />
+      </Button>
       <Button variant="ghost" size="icon" className="size-8" title="Open (⌘O)" onClick={onOpen}>
         <FolderOpen />
       </Button>
@@ -46,6 +45,15 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
 
       <Separator orientation="vertical" className="h-5 mx-1" />
 
+      <div className="flex-1 flex justify-center">
+        <GraphSearchBar />
+      </div>
+
+      {/* Theme toggle */}
+      <Button variant="ghost" size="icon" className="size-8" title="Toggle theme" onClick={toggleTheme}>
+        {theme === 'dark' ? <Sun /> : <Moon />}
+      </Button>
+
       {/* Claude auth */}
       <Popover>
         <PopoverTrigger asChild>
@@ -55,7 +63,7 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
             <ChevronDown className="size-3" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-3 space-y-2" align="start">
+        <PopoverContent className="w-64 p-3 space-y-2" align="end">
           <div className="flex gap-1">
             <Button
               size="sm"
@@ -99,34 +107,6 @@ export function Toolbar({ onOpen, onSave, onSaveAs }: ToolbarProps): React.JSX.E
           )}
         </PopoverContent>
       </Popover>
-
-      <Separator orientation="vertical" className="h-5 mx-1" />
-
-      {/* Graph controls */}
-      <Popover open={showGraphControls} onOpenChange={setShowGraphControls}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" className="h-8 px-2 gap-1.5 text-muted-foreground" title="Graph controls">
-            <SlidersHorizontal className="size-4" />
-            <ChevronDown className="size-3" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="p-0 w-72" align="start">
-          <AnimatePresence>
-            {showGraphControls && (
-              <GraphControlsPanel onClose={() => setShowGraphControls(false)} />
-            )}
-          </AnimatePresence>
-        </PopoverContent>
-      </Popover>
-
-      <div className="flex-1 flex justify-center">
-        <GraphSearchBar />
-      </div>
-
-      {/* Theme toggle */}
-      <Button variant="ghost" size="icon" className="size-8" title="Toggle theme" onClick={toggleTheme}>
-        {theme === 'dark' ? <Sun /> : <Moon />}
-      </Button>
 
       <Separator orientation="vertical" className="h-5 mx-1" />
 

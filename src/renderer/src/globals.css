@@ -153,6 +153,14 @@
   color: oklch(0.8 0 0) !important;
 }
 
+/* Override React Flow's grab cursor on nodes — keep grabbing while dragging */
+.react-flow__node.draggable {
+  cursor: default;
+}
+.react-flow__node.draggable.dragging {
+  cursor: grabbing;
+}
+
 body {
   @apply bg-background text-foreground;
   font-family: 'Oxanium', sans-serif;
