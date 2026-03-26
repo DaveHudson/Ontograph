@@ -5,6 +5,7 @@ import { createMenu } from './menu'
 import { registerFileIPC } from './ipc/file'
 import { registerClaudeIPC } from './ipc/claude'
 import { registerEvalIPC } from './ipc/eval'
+import { registerUpdateIpc } from './ipc/update'
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -52,6 +53,7 @@ app.whenReady().then(() => {
 
   const mainWindow = createWindow()
   Menu.setApplicationMenu(createMenu(mainWindow))
+  registerUpdateIpc(mainWindow)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

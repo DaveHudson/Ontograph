@@ -3,6 +3,13 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 type Callback<T extends unknown[] = []> = (...args: T) => void
 
+export type UpdateState = {
+  status: 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
+  version?: string
+  progress?: number
+  error?: string
+}
+
 function onChannel<T extends unknown[]>(channel: string, callback: Callback<T>): () => void {
   const handler = (_event: unknown, ...args: unknown[]): void => callback(...(args as T))
   ipcRenderer.on(channel, handler)
@@ -84,7 +91,16 @@ const api = {
   },
   respondValidation: (errors: string): void => {
     ipcRenderer.invoke('claude:validation-response', errors)
-  }
+  },
+
+  // Update operations
+  checkForUpdate: (): Promise<void> => ipcRenderer.invoke('update:check'),
+  downloadUpdate: (): Promise<void> => ipcRenderer.invoke('update:download'),
+  installUpdate: (): void => { ipcRenderer.invoke('update:install') },
+  openReleasesPage: (): void => { ipcRenderer.invoke('update:open-releases') },
+  getUpdateState: (): Promise<UpdateState> => ipcRenderer.invoke('update:get-state'),
+  onUpdateState: (callback: (state: UpdateState) => void): (() => void) =>
+    onChannel<[UpdateState]>('update:state', callback)
 }
 
 if (process.contextIsolated) {

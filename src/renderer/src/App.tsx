@@ -18,6 +18,7 @@ import { useOntologyStore } from './store/ontology'
 import { useUIStore } from './store/ui'
 import { useHistoryStore } from './store/history'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from './components/ui/empty'
+import { UpdateBanner } from './components/UpdateBanner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './components/ui/dialog'
 import { MousePointer2 } from 'lucide-react'
 import peopleTtl from './samples/people.ttl?raw'
@@ -135,6 +136,7 @@ function App(): React.JSX.Element {
 
   return (
     <div className="flex flex-col h-full w-full">
+      <UpdateBanner />
       <Toolbar onNew={handleNew} onOpen={handleOpen} onSave={handleSave} onSaveAs={handleSaveAs} />
 
       <ResizablePanelGroup orientation="horizontal" className="flex-1 overflow-hidden" id="main-layout">

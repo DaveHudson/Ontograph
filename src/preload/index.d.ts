@@ -1,5 +1,12 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
+export interface UpdateState {
+  status: 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
+  version?: string
+  progress?: number
+  error?: string
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
@@ -44,6 +51,14 @@ declare global {
       // Respond to main process
       respondOntology: (turtle: string) => void
       respondValidation: (errors: string) => void
+
+      // Update operations
+      checkForUpdate: () => Promise<void>
+      downloadUpdate: () => Promise<void>
+      installUpdate: () => void
+      openReleasesPage: () => void
+      getUpdateState: () => Promise<UpdateState>
+      onUpdateState: (callback: (state: UpdateState) => void) => () => void
     }
   }
 }
