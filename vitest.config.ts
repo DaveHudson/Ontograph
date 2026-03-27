@@ -1,13 +1,27 @@
 import { defineConfig } from 'vitest/config'
 import { resolve } from 'path'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
+  plugins: [react()],
   test: {
-    include: ['tests/**/*.test.ts']
+    include: ['tests/**/*.test.{ts,tsx}'],
+    environment: 'jsdom',
+    setupFiles: ['tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/renderer/src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/renderer/src/main.tsx',
+        'src/renderer/src/env.d.ts',
+        'src/renderer/src/components/ui/**'
+      ]
+    }
   },
   resolve: {
     alias: {
-      '@renderer': resolve('src/renderer/src')
+      '@renderer': resolve('src/renderer/src'),
+      '@': resolve('src/renderer/src')
     }
   }
 })
