@@ -19,9 +19,10 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          gh release create "${{ github.ref_name }}" \
-            --title "${{ github.ref_name }}" \
+          gh release create "$TAG_NAME" \
+            --title "$TAG_NAME" \
             --generate-notes
 
   build:
@@ -52,9 +53,11 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+        working-directory: apps/desktop
 
       - name: Build
         run: bun run build
+        working-directory: apps/desktop
 
       - name: Package and publish (macOS)
         if: matrix.platform == 'mac'
@@ -66,15 +69,18 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: bunx electron-builder --mac --publish always
+        working-directory: apps/desktop
 
       - name: Package and publish (Windows)
         if: matrix.platform == 'win'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: bunx electron-builder --win --publish always
+        working-directory: apps/desktop
 
       - name: Package and publish (Linux)
         if: matrix.platform == 'linux'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: bunx electron-builder --linux --publish always
+        working-directory: apps/desktop
