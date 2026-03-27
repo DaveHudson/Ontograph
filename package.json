@@ -12,12 +12,12 @@
     "start": "electron-vite preview",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
-    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "typecheck": "bun run typecheck:node && bun run typecheck:web",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:win": "npm run build && electron-builder --win --config",
-    "build:mac": "npm run build && electron-builder --mac --config",
-    "build:linux": "npm run build && electron-builder --linux --config"
+    "build:win": "bun run build && electron-builder --win --config",
+    "build:mac": "bun run build && electron-builder --mac --config",
+    "build:linux": "bun run build && electron-builder --linux --config"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.83",
