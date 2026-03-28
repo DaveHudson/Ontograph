@@ -57,6 +57,7 @@ export default function Home() {
           </span>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="/brand" className="hover:text-foreground transition-colors">Brand</a>
             <a href="https://github.com/DaveHudson/Ontograph" className="hover:text-foreground transition-colors flex items-center gap-1.5">
               <GithubIcon className="size-4" />
               GitHub
