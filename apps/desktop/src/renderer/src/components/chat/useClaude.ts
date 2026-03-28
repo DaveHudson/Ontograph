@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useOntologyStore } from '@renderer/store/ontology'
 import type { OntologyClass } from '@renderer/model/types'
 import { serializeToTurtle } from '@renderer/model/serialize'
 import { validateOntology } from '@renderer/services/validation'
+import { track } from '@renderer/lib/analytics'
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'tool'
@@ -59,6 +60,7 @@ export function useClaude(): UseClaudeReturn {
     () => (localStorage.getItem(THINKING_STORAGE) as ThinkingBudget) || 'auto'
   )
   const [cliDetected, setCliDetected] = useState(false)
+  const hasTrackedFirstMessage = useRef(false)
 
   const store = useOntologyStore
 
@@ -209,6 +211,11 @@ export function useClaude(): UseClaudeReturn {
 
   const sendMessage = useCallback(
     (message: string, context?: string) => {
+      if (!hasTrackedFirstMessage.current) {
+        track('first_claude_interaction')
+        hasTrackedFirstMessage.current = true
+      }
+      track('claude_message_sent', { model, authMode })
       setMessages((prev) => [...prev, { role: 'user', content: message }])
       setIsLoading(true)
       const auth =

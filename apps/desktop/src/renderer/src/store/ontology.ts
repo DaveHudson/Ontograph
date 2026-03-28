@@ -3,6 +3,7 @@ import type { Ontology, OntologyClass, ObjectProperty, DatatypeProperty } from '
 import { createEmptyOntology } from '../model/types'
 import { parseTurtleWithWarnings, type ParseWarning } from '../model/parse'
 import { serializeToTurtle } from '../model/serialize'
+import { track } from '../lib/analytics'
 
 interface OntologyState {
   ontology: Ontology
@@ -46,11 +47,13 @@ export const useOntologyStore = create<OntologyState>((set, get) => ({
   loadFromTurtle: (turtle, filePath) => {
     const { ontology, warnings } = parseTurtleWithWarnings(turtle)
     set({ ontology, filePath: filePath ?? null, isDirty: false, importWarnings: warnings })
+    track('ontology_loaded', { classCount: ontology.classes.size, source: filePath?.startsWith('Sample') ? 'sample' : 'file' })
   },
 
   clearImportWarnings: () => set({ importWarnings: [] }),
 
   exportToTurtle: () => {
+    track('ontology_exported', { classCount: get().ontology.classes.size })
     return serializeToTurtle(get().ontology)
   },
 
@@ -70,12 +73,15 @@ export const useOntologyStore = create<OntologyState>((set, get) => ({
       ontology.objectProperties = new Map(state.ontology.objectProperties)
       ontology.datatypeProperties = new Map(state.ontology.datatypeProperties)
 
+      const isFirst = ontology.classes.size === 0
       ontology.classes.set(uri, {
         uri,
         subClassOf: [],
         disjointWith: [],
         ...partial
       })
+      if (isFirst) track('first_ontology_created')
+      track('class_added')
       return { ontology, isDirty: true }
     })
   },
@@ -129,6 +135,7 @@ export const useOntologyStore = create<OntologyState>((set, get) => ({
         range: [],
         ...partial
       })
+      track('object_property_added')
       return { ontology, isDirty: true }
     })
   },
@@ -161,6 +168,7 @@ export const useOntologyStore = create<OntologyState>((set, get) => ({
         range: 'http://www.w3.org/2001/XMLSchema#string',
         ...partial
       })
+      track('datatype_property_added')
       return { ontology, isDirty: true }
     })
   },
