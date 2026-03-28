@@ -181,11 +181,19 @@ export default function Home() {
           >
             <div style={{ transform: 'rotateX(2deg)', transformOrigin: 'bottom center' }}>
               <Image
+                src="/images/hero-graph-light.png"
+                alt="Ontograph visual graph editor showing a People ontology with Person, Employee, Manager and Organisation classes connected by subClassOf and object property edges"
+                width={1600}
+                height={1200}
+                className="w-full h-auto dark:hidden"
+                priority
+              />
+              <Image
                 src="/images/hero-graph.png"
                 alt="Ontograph visual graph editor showing a People ontology with Person, Employee, Manager and Organisation classes connected by subClassOf and object property edges"
                 width={1600}
                 height={1200}
-                className="w-full h-auto"
+                className="w-full h-auto hidden dark:block"
                 priority
               />
             </div>
@@ -228,11 +236,18 @@ export default function Home() {
           {/* Full-width app screenshot showing graph + properties panel */}
           <div className="rounded-xl overflow-hidden border border-border/60 screenshot-glow transition-shadow duration-500">
             <Image
+              src="/images/graph-detail-light.png"
+              alt="Ontograph showing the graph editor with a selected Person node and its properties panel displaying class details, datatype properties, and relationships"
+              width={1600}
+              height={1200}
+              className="w-full h-auto dark:hidden"
+            />
+            <Image
               src="/images/graph-detail.png"
               alt="Ontograph showing the graph editor with a selected Person node and its properties panel displaying class details, datatype properties, and relationships"
               width={1600}
               height={1200}
-              className="w-full h-auto"
+              className="w-full h-auto hidden dark:block"
             />
           </div>
         </div>
@@ -266,11 +281,18 @@ export default function Home() {
           <div className="grid sm:grid-cols-5 gap-12 items-center mb-16">
             <div className="sm:col-span-2 rounded-xl overflow-hidden border border-border/60 screenshot-glow transition-shadow duration-500">
               <Image
+                src="/images/ai-validation-light.png"
+                alt="AI validation panel scoring an ontology at 78 out of 100 with coverage analysis and improvement suggestions"
+                width={478}
+                height={1145}
+                className="w-full h-auto dark:hidden"
+              />
+              <Image
                 src="/images/ai-validation.png"
                 alt="AI validation panel scoring an ontology at 78 out of 100 with coverage analysis and improvement suggestions"
                 width={478}
                 height={1145}
-                className="w-full h-auto"
+                className="w-full h-auto hidden dark:block"
               />
             </div>
             <div className="sm:col-span-3 space-y-6">
