@@ -26,6 +26,18 @@ const buttonVariants = cva(
         icon: "h-10 w-10",
       },
     },
+    compoundVariants: [
+      {
+        variant: "ghost",
+        size: "icon",
+        class: "hover:bg-icon-btn-hover",
+      },
+      {
+        variant: "outline",
+        size: "icon",
+        class: "hover:bg-icon-btn-hover",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
