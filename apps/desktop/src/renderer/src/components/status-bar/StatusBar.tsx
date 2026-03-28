@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react'
-import { CircleAlert, TriangleAlert } from 'lucide-react'
+import { useMemo, useState, useCallback } from 'react'
+import { CircleAlert, TriangleAlert, BarChart3 } from 'lucide-react'
 import { useOntologyStore } from '@renderer/store/ontology'
 import { useUIStore } from '@renderer/store/ui'
 import { serializeToTurtle } from '@renderer/model/serialize'
 import { estimateTokenCount } from '@renderer/services/tokens'
 import { validateOntology, type ValidationError } from '@renderer/services/validation'
+import { getAnalyticsOptOut, setAnalyticsOptOut } from '@renderer/lib/analytics'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 
 function localName(uri: string): string {
   const idx = Math.max(uri.lastIndexOf('#'), uri.lastIndexOf('/'))
@@ -34,6 +36,13 @@ export function StatusBar(): React.JSX.Element {
   const warnCount = errors.filter((e) => e.severity === 'warning').length
 
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [analyticsOff, setAnalyticsOff] = useState(() => getAnalyticsOptOut())
+
+  const toggleAnalytics = useCallback(() => {
+    const newValue = !analyticsOff
+    setAnalyticsOptOut(newValue)
+    setAnalyticsOff(newValue)
+  }, [analyticsOff])
 
   function handleErrorClick(error: ValidationError): void {
     if (error.elementType === 'class') {
@@ -87,6 +96,18 @@ export function StatusBar(): React.JSX.Element {
         )}
 
         <span>{classCount} classes &middot; {propCount} properties &middot; {tokenDisplay}</span>
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={toggleAnalytics} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                <BarChart3 className={`size-3 ${analyticsOff ? 'opacity-40' : ''}`} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p className="text-xs">{analyticsOff ? 'Analytics disabled — click to enable' : 'Analytics enabled — click to disable'}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </span>
     </div>
   )

@@ -1,3 +1,6 @@
+import { initSentryMain } from './sentry'
+initSentryMain()
+
 import { syncShellEnvironment } from './syncShellEnvironment'
 import { app, shell, BrowserWindow, Menu, nativeImage } from 'electron'
 
