@@ -57,7 +57,7 @@ export function Toolbar({ onNew, onOpen, onSave, onSaveAs }: ToolbarProps): Reac
       {/* Claude auth */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" className="h-8 px-2 gap-1.5 text-muted-foreground" title="Claude settings">
+          <Button variant="ghost" className="h-8 px-2 gap-1.5 text-muted-foreground hover:bg-icon-btn-hover" title="Claude settings">
             <Bot className="size-4" />
             <span className={cn('size-1.5 rounded-full', isReady ? 'bg-success' : 'bg-muted-foreground/40')} />
             <ChevronDown className="size-3" />
