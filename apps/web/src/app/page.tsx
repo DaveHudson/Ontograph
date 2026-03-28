@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Brain, GitGraph, Shield, Zap, Download, ArrowRight, Layers, Network } from 'lucide-react'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
+import { MobileNav } from '@/components/ui/mobile-nav'
 
 function LogoMark({ className }: { className?: string }) {
   return (
@@ -106,12 +107,12 @@ export default function Home() {
     <div className="min-h-screen overflow-hidden">
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-8 h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
           <span className="flex items-center gap-2 text-lg font-semibold tracking-tight">
             <LogoMark className="size-6" />
             Ontograph
           </span>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+          <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="/brand" className="hover:text-foreground transition-colors">Brand</a>
             <a href="https://github.com/DaveHudson/Ontograph" className="hover:text-foreground transition-colors flex items-center gap-1.5">
@@ -126,11 +127,12 @@ export default function Home() {
               Download
             </a>
           </div>
+          <MobileNav />
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="relative px-8">
+      <section className="relative px-4 sm:px-8">
         {/* Animated node graph background */}
         <AnimatedNodes />
 
@@ -138,11 +140,11 @@ export default function Home() {
         <div className="absolute top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/[0.07] blur-[100px] animate-float-slow pointer-events-none" />
         <div className="absolute top-40 right-1/4 w-[400px] h-[400px] rounded-full bg-accent/[0.05] blur-[100px] animate-float-slower pointer-events-none" />
 
-        <div className="relative max-w-3xl mx-auto text-center pt-44 pb-16">
+        <div className="relative max-w-3xl mx-auto text-center pt-28 sm:pt-44 pb-12 sm:pb-16">
           <p className="animate-fade-in-up text-sm text-accent font-medium mb-6 tracking-widest uppercase">
             The AI-native ontology editor
           </p>
-          <h1 className="animate-fade-in-up-delay-1 text-4xl sm:text-5xl font-bold tracking-tight leading-[1.15] mb-6">
+          <h1 className="animate-fade-in-up-delay-1 text-3xl sm:text-5xl font-bold tracking-tight leading-[1.15] mb-6">
             Build the knowledge layer{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
               your AI agents need.
@@ -155,17 +157,17 @@ export default function Home() {
             Ontograph pairs a visual graph editor with AI that understands OWL — so you can create
             production-ready ontologies through natural language.
           </p>
-          <div className="animate-fade-in-up-delay-3 flex items-center justify-center gap-4">
+          <div className="animate-fade-in-up-delay-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <a
               href="#download"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground w-full sm:w-auto px-6 py-2.5 sm:px-7 sm:py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
             >
               <Download className="size-4" />
               Download for free
             </a>
             <a
               href="https://github.com/DaveHudson/Ontograph"
-              className="inline-flex items-center gap-2 border border-border px-7 py-3 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+              className="inline-flex items-center justify-center gap-2 border border-border w-full sm:w-auto px-6 py-2.5 sm:px-7 sm:py-3 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
             >
               <GithubIcon className="size-4" />
               View on GitHub
@@ -174,7 +176,7 @@ export default function Home() {
         </div>
 
         {/* Hero screenshot — perspective tilt for depth */}
-        <div className="relative max-w-5xl mx-auto pb-32">
+        <div className="relative max-w-5xl mx-auto pb-16 sm:pb-32">
           <div
             className="animate-fade-in-up-delay-3 relative rounded-xl overflow-hidden border border-border/60 screenshot-glow transition-shadow duration-500"
             style={{ perspective: '1200px' }}
@@ -204,12 +206,12 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section id="features" className="relative py-32 px-8 border-t border-border/30">
+      <section id="features" className="relative py-16 sm:py-32 px-4 sm:px-8 border-t border-border/30">
         <div className="absolute top-1/2 left-0 w-[300px] h-[300px] rounded-full bg-primary/[0.04] blur-[80px] animate-float-slower pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
               The ontology editor built for the AI era
             </h2>
             <p className="text-muted-foreground text-base max-w-2xl mx-auto">
@@ -218,11 +220,11 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-20">
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="group rounded-xl border border-border/60 bg-card/50 p-8 hover:border-primary/30 hover:bg-card/80 transition-all duration-200"
+                className="group rounded-xl border border-border/60 bg-card/50 p-6 sm:p-8 hover:border-primary/30 hover:bg-card/80 transition-all duration-200"
               >
                 <div className="size-11 rounded-lg bg-primary/10 group-hover:bg-primary/15 flex items-center justify-center mb-5 transition-colors">
                   <feature.icon className="size-5 text-primary" />
@@ -254,17 +256,17 @@ export default function Home() {
       </section>
 
       {/* AI Section — two-column layout with panel screenshot */}
-      <section className="relative py-32 px-8 border-t border-border/30">
+      <section className="relative py-16 sm:py-32 px-4 sm:px-8 border-t border-border/30">
         <div className="absolute top-1/3 right-0 w-[400px] h-[400px] rounded-full bg-accent/[0.04] blur-[100px] animate-float-slow pointer-events-none" />
         <div className="absolute bottom-1/4 left-1/4 w-[350px] h-[350px] rounded-full bg-primary/[0.05] blur-[80px] animate-float-slower pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <div className="inline-flex items-center gap-2 text-sm text-accent font-medium mb-6 px-4 py-1.5 rounded-full border border-accent/20 bg-accent/5">
               <Brain className="size-4" />
               Powered by Claude
             </div>
-            <h2 className="text-3xl font-bold tracking-tight mb-5">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-5">
               Describe your domain.{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                 Watch your ontology emerge.
@@ -278,7 +280,7 @@ export default function Home() {
           </div>
 
           {/* Two-column: AI validation panel + description */}
-          <div className="grid sm:grid-cols-5 gap-12 items-center mb-16">
+          <div className="grid sm:grid-cols-5 gap-8 sm:gap-12 items-center mb-12 sm:mb-16">
             <div className="sm:col-span-2 rounded-xl overflow-hidden border border-border/60 screenshot-glow transition-shadow duration-500">
               <Image
                 src="/images/ai-validation-light.png"
@@ -328,7 +330,7 @@ export default function Home() {
           </div>
 
           {/* Chat example */}
-          <div className="max-w-3xl mx-auto rounded-xl border border-border/60 bg-card/30 p-8 text-left font-mono text-sm leading-relaxed">
+          <div className="max-w-3xl mx-auto rounded-xl border border-border/60 bg-card/30 p-5 sm:p-8 text-left font-mono text-sm leading-relaxed">
             <div className="text-muted-foreground/70 text-xs uppercase tracking-wide mb-2">You:</div>
             <div className="text-foreground mb-6">
               Create an ontology for a university with students, courses, and professors.
@@ -344,12 +346,12 @@ export default function Home() {
       </section>
 
       {/* Use Cases */}
-      <section className="relative py-32 px-8 border-t border-border/30">
+      <section className="relative py-16 sm:py-32 px-4 sm:px-8 border-t border-border/30">
         <div className="absolute top-1/2 right-1/4 w-[350px] h-[350px] rounded-full bg-accent/[0.04] blur-[80px] animate-float-slow pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">
+          <div className="text-center mb-10 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
               Your AI agents are only as smart as the knowledge behind them
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -357,22 +359,22 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-8">
-            <div className="rounded-xl border border-border/60 bg-card/50 p-8 hover:border-accent/30 transition-colors">
+          <div className="grid sm:grid-cols-3 gap-4 sm:gap-8">
+            <div className="rounded-xl border border-border/60 bg-card/50 p-6 sm:p-8 hover:border-accent/30 transition-colors">
               <div className="text-accent text-sm font-medium uppercase tracking-wider mb-4">RAG Pipelines</div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Ontology-powered RAG delivers more precise retrieval than unstructured vector search.
                 Build the knowledge graph that gives your AI the context it needs.
               </p>
             </div>
-            <div className="rounded-xl border border-border/60 bg-card/50 p-8 hover:border-accent/30 transition-colors">
+            <div className="rounded-xl border border-border/60 bg-card/50 p-6 sm:p-8 hover:border-accent/30 transition-colors">
               <div className="text-accent text-sm font-medium uppercase tracking-wider mb-4">AI Agents</div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Ground your AI agents in verified, typed knowledge. Eliminate hallucination and enable
                 explainability with formal ontology structures.
               </p>
             </div>
-            <div className="rounded-xl border border-border/60 bg-card/50 p-8 hover:border-accent/30 transition-colors">
+            <div className="rounded-xl border border-border/60 bg-card/50 p-6 sm:p-8 hover:border-accent/30 transition-colors">
               <div className="text-accent text-sm font-medium uppercase tracking-wider mb-4">Context Graphs</div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Create the structured context layer that powers intelligent applications.
@@ -384,14 +386,14 @@ export default function Home() {
       </section>
 
       {/* Download */}
-      <section id="download" className="relative py-32 px-8 border-t border-border/30">
+      <section id="download" className="relative py-16 sm:py-32 px-4 sm:px-8 border-t border-border/30">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.06] blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-3xl mx-auto text-center">
           <p className="text-sm text-accent font-medium mb-4 tracking-widest uppercase">
             Open source & free
           </p>
-          <h2 className="text-3xl font-bold tracking-tight mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
             Start building your knowledge layer
           </h2>
           <p className="text-muted-foreground mb-10">
@@ -412,8 +414,8 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/30 py-10 px-8">
-        <div className="max-w-5xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
+      <footer className="border-t border-border/30 py-8 sm:py-10 px-4 sm:px-8">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-2">
             <LogoMark className="size-4" />
             Ontograph
