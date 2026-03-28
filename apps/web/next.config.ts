@@ -1,5 +1,24 @@
 import type { NextConfig } from 'next'
+import bundleAnalyzer from '@next/bundle-analyzer'
 
-const nextConfig: NextConfig = {}
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
 
-export default nextConfig
+const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/:path*.(ico|png|svg|woff2)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
+  },
+}
+
+export default withBundleAnalyzer(nextConfig)
