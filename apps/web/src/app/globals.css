@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@source "../../**/*.{ts,tsx}";
+
 :root {
   --background: #0f0d1a;
   --foreground: #eeedf2;
@@ -26,16 +28,8 @@
   --color-card: var(--card);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  background: var(--background);
-  color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
