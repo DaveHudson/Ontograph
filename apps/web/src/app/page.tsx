@@ -36,8 +36,8 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <span className="font-semibold tracking-tight">Ontograph</span>
+        <div className="max-w-5xl mx-auto px-8 h-16 flex items-center justify-between">
+          <span className="text-lg font-semibold tracking-tight">Ontograph</span>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="https://github.com/DaveHudson/Ontograph" className="hover:text-foreground transition-colors flex items-center gap-1.5">
@@ -46,7 +46,7 @@ export default function Home() {
             </a>
             <a
               href="#download"
-              className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Download
             </a>
@@ -55,42 +55,42 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="relative pt-40 pb-24 px-6">
+      <section className="relative px-8">
         {/* Dot grid background */}
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
+            backgroundSize: '32px 32px',
           }}
         />
 
-        <div className="relative max-w-4xl mx-auto text-center">
-          <p className="text-sm text-muted-foreground mb-4 tracking-wide uppercase">
+        <div className="relative max-w-3xl mx-auto text-center pt-44 pb-32">
+          <p className="text-sm text-muted-foreground mb-6 tracking-widest uppercase font-medium">
             Open source ontology editor
           </p>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.15] mb-8">
             Building ontologies shouldn&apos;t feel like writing XML in a{' '}
             <span className="text-muted-foreground">2005 Java app.</span>
           </h1>
-          <p className="text-xl text-accent font-medium mb-2">
+          <p className="text-lg text-accent font-medium mb-3">
             Where knowledge takes shape.
           </p>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-base text-muted-foreground max-w-xl mx-auto mb-12 leading-relaxed">
             A modern, AI-powered ontology editor with visual graph editing,
             real-time validation, and Claude integration.
           </p>
           <div className="flex items-center justify-center gap-4">
             <a
               href="#download"
-              className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 bg-primary text-white px-7 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
             >
               <Download className="size-4" />
               Download for free
             </a>
             <a
               href="https://github.com/DaveHudson/Ontograph"
-              className="inline-flex items-center gap-2 border border-border px-6 py-3 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+              className="inline-flex items-center gap-2 border border-border px-7 py-3 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
             >
               <GithubIcon className="size-4" />
               View on GitHub
@@ -100,26 +100,26 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight mb-3">
+      <section id="features" className="py-32 px-8 border-t border-border/30">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl font-bold tracking-tight mb-4">
               Everything you need to model knowledge
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-base">
               Built for ontology engineers, knowledge architects, and AI researchers.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 gap-6">
+          <div className="grid sm:grid-cols-2 gap-8">
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-xl border border-border bg-card/50 p-6 hover:border-primary/30 transition-colors"
+                className="rounded-xl border border-border/60 bg-card/50 p-8 hover:border-primary/30 transition-colors"
               >
-                <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <div className="size-11 rounded-lg bg-primary/10 flex items-center justify-center mb-5">
                   <feature.icon className="size-5 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-1.5">{feature.title}</h3>
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
               </div>
             ))}
@@ -128,27 +128,27 @@ export default function Home() {
       </section>
 
       {/* AI Section */}
-      <section className="py-24 px-6 border-t border-border/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 text-sm text-accent font-medium mb-4 px-3 py-1 rounded-full border border-accent/20 bg-accent/5">
+      <section className="py-32 px-8 border-t border-border/30">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 text-sm text-accent font-medium mb-6 px-4 py-1.5 rounded-full border border-accent/20 bg-accent/5">
             <Brain className="size-4" />
             Powered by Claude
           </div>
-          <h2 className="text-3xl font-bold tracking-tight mb-4">
+          <h2 className="text-3xl font-bold tracking-tight mb-5">
             Describe what you need. Watch it build.
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
             Chat with Claude to create classes, properties, and relationships in natural language.
             The AI understands OWL semantics and can suggest refinements, find inconsistencies,
             and help you think through your domain model.
           </p>
-          <div className="rounded-xl border border-border bg-card/30 p-8 text-left font-mono text-sm">
-            <div className="text-muted-foreground mb-3">You:</div>
-            <div className="text-foreground mb-4">
+          <div className="rounded-xl border border-border/60 bg-card/30 p-8 text-left font-mono text-sm leading-relaxed">
+            <div className="text-muted-foreground/70 text-xs uppercase tracking-wide mb-2">You:</div>
+            <div className="text-foreground mb-6">
               Create an ontology for a university with students, courses, and professors.
               Students enroll in courses, professors teach courses.
             </div>
-            <div className="text-accent mb-3">Claude:</div>
+            <div className="text-accent/80 text-xs uppercase tracking-wide mb-2">Claude:</div>
             <div className="text-muted-foreground">
               I&apos;ll create the class hierarchy and object properties. Adding Person as a
               superclass of Student and Professor, with enrolledIn and teaches relationships...
@@ -158,33 +158,31 @@ export default function Home() {
       </section>
 
       {/* Download */}
-      <section id="download" className="py-24 px-6 border-t border-border/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold tracking-tight mb-3">
+      <section id="download" className="py-32 px-8 border-t border-border/30">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-bold tracking-tight mb-4">
             Get Ontograph
           </h2>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-10">
             Free and open source. Available for macOS, Windows, and Linux.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="https://github.com/DaveHudson/Ontograph/releases/latest"
-              className="inline-flex items-center gap-2 bg-primary text-background px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
-            >
-              <Download className="size-4" />
-              Download latest release
-              <ArrowRight className="size-4" />
-            </a>
-          </div>
-          <p className="text-xs text-muted-foreground mt-4">
+          <a
+            href="https://github.com/DaveHudson/Ontograph/releases/latest"
+            className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <Download className="size-4" />
+            Download latest release
+            <ArrowRight className="size-4" />
+          </a>
+          <p className="text-xs text-muted-foreground mt-6">
             MIT License. Requires macOS 12+, Windows 10+, or Ubuntu 20.04+.
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8 px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
+      <footer className="border-t border-border/30 py-10 px-8">
+        <div className="max-w-5xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
           <span>Ontograph</span>
           <div className="flex items-center gap-6">
             <a href="https://github.com/DaveHudson/Ontograph" className="hover:text-foreground transition-colors">
