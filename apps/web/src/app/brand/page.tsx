@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
-import { TokenBlock } from './token-block'
+
+const TokenBlock = dynamic(() => import('./token-block').then(m => ({ default: m.TokenBlock })), {
+  loading: () => <div className="animate-pulse h-40 bg-muted rounded-lg" />,
+})
 
 export const metadata: Metadata = {
   title: 'Brand — Ontograph',
