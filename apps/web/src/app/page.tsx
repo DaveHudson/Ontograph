@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { Brain, GitGraph, Shield, Zap, Download, ArrowRight } from 'lucide-react'
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 
 function LogoMark({ className }: { className?: string }) {
   return (
@@ -57,10 +58,12 @@ export default function Home() {
           </span>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="/brand" className="hover:text-foreground transition-colors">Brand</a>
             <a href="https://github.com/DaveHudson/Ontograph" className="hover:text-foreground transition-colors flex items-center gap-1.5">
               <GithubIcon className="size-4" />
               GitHub
             </a>
+            <AnimatedThemeToggler className="size-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors [&_svg]:size-4" />
             <a
               href="#download"
               className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
