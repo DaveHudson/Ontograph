@@ -61,7 +61,10 @@ export function MetricsPanel(): React.JSX.Element {
   const ontology = useOntologyStore((s) => s.ontology);
   const hasContent = ontology.classes.size > 0;
 
-  const metrics = useMemo(() => (hasContent ? computeMetrics(ontology) : null), [ontology, hasContent]);
+  const metrics = useMemo(
+    () => (hasContent ? computeMetrics(ontology) : null),
+    [ontology, hasContent],
+  );
 
   if (!hasContent || !metrics) {
     return (
@@ -100,7 +103,11 @@ export function MetricsPanel(): React.JSX.Element {
       <MetricRow label="Avg breadth" value={structure.avgBreadth} format="decimal" />
       <MetricRow label="Root classes" value={structure.rootClasses} />
       <MetricRow label="Leaf classes" value={structure.leafClasses} />
-      <MetricRow label="Orphan nodes" value={structure.orphanNodes} warn={structure.orphanNodes > 0} />
+      <MetricRow
+        label="Orphan nodes"
+        value={structure.orphanNodes}
+        warn={structure.orphanNodes > 0}
+      />
       <MetricRow
         label="Multi-parent classes"
         value={structure.multiParentClasses}
