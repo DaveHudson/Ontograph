@@ -18,7 +18,9 @@
     "test:watch": "vitest",
     "build:win": "bun run build && electron-builder --win --config",
     "build:mac": "bun run build && electron-builder --mac --config",
-    "build:linux": "bun run build && electron-builder --linux --config"
+    "build:linux": "bun run build && electron-builder --linux --config",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.83",
@@ -60,6 +62,10 @@
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",
+    "@storybook/addon-essentials": "8",
+    "@storybook/react": "8",
+    "@storybook/react-vite": "8",
+    "@storybook/test": "8",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -68,11 +74,12 @@
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.1",
     "electron": "^35.2.1",
     "electron-builder": "^26.0.12",
     "electron-vite": "5",
     "jsdom": "^29.0.1",
+    "storybook": "8",
     "typescript": "^5.8.3",
     "vite": "^7.0.0",
     "vitest": "^3.2.1"
