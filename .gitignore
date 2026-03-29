@@ -8,6 +8,9 @@ package-lock.json
 coverage/
 .turbo
 .next
+storybook-static/
+test-results/
+playwright-report/
 
 # Environment files
 .env
