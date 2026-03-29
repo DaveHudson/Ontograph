@@ -93,11 +93,7 @@ export function StatusBar(): React.JSX.Element {
         {hasIssues && (
           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs font-medium"
-              >
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-medium">
                 {errorCount > 0 && `${errorCount} error${errorCount !== 1 ? 's' : ''}`}
                 {errorCount > 0 && warnCount > 0 && ' · '}
                 {warnCount > 0 && `${warnCount} warning${warnCount !== 1 ? 's' : ''}`}
