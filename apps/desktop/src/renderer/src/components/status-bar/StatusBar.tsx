@@ -96,7 +96,7 @@ export function StatusBar(): React.JSX.Element {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-xs text-destructive font-medium hover:text-destructive/80"
+                className="h-6 px-2 text-xs font-medium"
               >
                 {errorCount > 0 && `${errorCount} error${errorCount !== 1 ? 's' : ''}`}
                 {errorCount > 0 && warnCount > 0 && ' · '}
