@@ -103,7 +103,7 @@ export function StatusBar(): React.JSX.Element {
                 {warnCount > 0 && `${warnCount} warning${warnCount !== 1 ? 's' : ''}`}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="p-0 w-80" side="top" align="end">
+            <PopoverContent className="p-0 w-80 max-h-64 overflow-y-auto" side="top" align="end">
               {errors.map((error) => (
                 <button
                   type="button"
