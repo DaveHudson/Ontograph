@@ -74,13 +74,14 @@ export function parseTurtle(turtle: string): Ontology {
 export function parseTurtleWithWarnings(turtle: string): ParseResult {
   const warnings: ParseWarning[] = [];
   let quads: Quad[];
+  let prefixes: Record<string, string> | undefined;
 
   try {
     const parser = new Parser();
     quads = parser.parse(turtle);
 
     // Merge prefixes from parser
-    var prefixes = (parser as unknown as { _prefixes: Record<string, string> })._prefixes;
+    prefixes = (parser as unknown as { _prefixes: Record<string, string> })._prefixes;
   } catch (err: unknown) {
     warnings.push({
       severity: 'error',
@@ -129,24 +130,30 @@ export function parseTurtleWithWarnings(turtle: string): ParseResult {
 
     if (p === `${RDFS}label`) {
       const literal = quad.object.termType === 'Literal' ? quad.object.value : o;
-      if (ontology.classes.has(s)) {
-        ontology.classes.get(s)!.label = literal;
-      } else if (ontology.objectProperties.has(s)) {
-        ontology.objectProperties.get(s)!.label = literal;
-      } else if (ontology.datatypeProperties.has(s)) {
-        ontology.datatypeProperties.get(s)!.label = literal;
+      const cls = ontology.classes.get(s);
+      const objProp = ontology.objectProperties.get(s);
+      const dtProp = ontology.datatypeProperties.get(s);
+      if (cls) {
+        cls.label = literal;
+      } else if (objProp) {
+        objProp.label = literal;
+      } else if (dtProp) {
+        dtProp.label = literal;
       }
       continue;
     }
 
     if (p === `${RDFS}comment`) {
       const literal = quad.object.termType === 'Literal' ? quad.object.value : o;
-      if (ontology.classes.has(s)) {
-        ontology.classes.get(s)!.comment = literal;
-      } else if (ontology.objectProperties.has(s)) {
-        ontology.objectProperties.get(s)!.comment = literal;
-      } else if (ontology.datatypeProperties.has(s)) {
-        ontology.datatypeProperties.get(s)!.comment = literal;
+      const cls = ontology.classes.get(s);
+      const objProp = ontology.objectProperties.get(s);
+      const dtProp = ontology.datatypeProperties.get(s);
+      if (cls) {
+        cls.comment = literal;
+      } else if (objProp) {
+        objProp.comment = literal;
+      } else if (dtProp) {
+        dtProp.comment = literal;
       }
       continue;
     }
@@ -170,23 +177,24 @@ export function parseTurtleWithWarnings(turtle: string): ParseResult {
 
     if (p === `${RDFS}domain`) {
       getOrCreateClass(ontology, o);
-      if (ontology.objectProperties.has(s)) {
-        const prop = ontology.objectProperties.get(s)!;
-        if (!prop.domain.includes(o)) prop.domain.push(o);
-      } else if (ontology.datatypeProperties.has(s)) {
-        const prop = ontology.datatypeProperties.get(s)!;
-        if (!prop.domain.includes(o)) prop.domain.push(o);
+      const objPropD = ontology.objectProperties.get(s);
+      const dtPropD = ontology.datatypeProperties.get(s);
+      if (objPropD) {
+        if (!objPropD.domain.includes(o)) objPropD.domain.push(o);
+      } else if (dtPropD) {
+        if (!dtPropD.domain.includes(o)) dtPropD.domain.push(o);
       }
       continue;
     }
 
     if (p === `${RDFS}range`) {
-      if (ontology.objectProperties.has(s)) {
-        const prop = ontology.objectProperties.get(s)!;
+      const objPropR = ontology.objectProperties.get(s);
+      const dtPropR = ontology.datatypeProperties.get(s);
+      if (objPropR) {
         getOrCreateClass(ontology, o);
-        if (!prop.range.includes(o)) prop.range.push(o);
-      } else if (ontology.datatypeProperties.has(s)) {
-        ontology.datatypeProperties.get(s)!.range = o;
+        if (!objPropR.range.includes(o)) objPropR.range.push(o);
+      } else if (dtPropR) {
+        dtPropR.range = o;
       } else if (isDatatypeURI(o)) {
         // Undeclared property with datatype range — treat as DatatypeProperty
         const prop = getOrCreateDatatypeProperty(ontology, s);
@@ -196,10 +204,10 @@ export function parseTurtleWithWarnings(turtle: string): ParseResult {
     }
 
     if (p === `${OWL}inverseOf`) {
-      if (ontology.objectProperties.has(s)) {
-        ontology.objectProperties.get(s)!.inverseOf = o;
+      const prop = ontology.objectProperties.get(s);
+      if (prop) {
+        prop.inverseOf = o;
       }
-      continue;
     }
   }
 

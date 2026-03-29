@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { getFloatingEdgeParams } from '@renderer/components/graph/edges/floating-edge-utils';
-import { Position } from '@xyflow/react';
+import { type InternalNode, Position } from '@xyflow/react';
 
-function makeNode(x: number, y: number, w: number, h: number) {
+function makeNode(x: number, y: number, w: number, h: number): InternalNode {
   return {
     measured: { width: w, height: h },
     internals: { positionAbsolute: { x, y } },
-  } as any;
+  } as unknown as InternalNode;
 }
 
 describe('getFloatingEdgeParams', () => {

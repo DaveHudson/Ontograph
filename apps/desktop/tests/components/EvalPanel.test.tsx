@@ -60,7 +60,7 @@ describe('EvalPanel', () => {
   it('disables Run Eval when domain is empty', () => {
     render(<EvalPanel />);
     expect(screen.getByText('Run Eval')).toBeInTheDocument();
-    const btn = screen.getByText('Run Eval').closest('button')!;
+    const btn = screen.getByText('Run Eval').closest('button') as HTMLButtonElement;
     expect(btn).toBeDisabled();
   });
 
@@ -68,7 +68,7 @@ describe('EvalPanel', () => {
     useEvalStore.getState().setConfig({ domain: 'Healthcare' });
     useOntologyStore.getState().addClass('http://ex/A');
     render(<EvalPanel />);
-    const btn = screen.getByText('Run Eval').closest('button')!;
+    const btn = screen.getByText('Run Eval').closest('button') as HTMLButtonElement;
     expect(btn).not.toBeDisabled();
   });
 

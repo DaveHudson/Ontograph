@@ -141,7 +141,7 @@ function App(): React.JSX.Element {
       window.api.onMenuFileSave(handleSave),
       window.api.onMenuFileSaveAs(handleSaveAs),
     ];
-    return () => cleanups.forEach((fn) => fn());
+    return () => cleanups.forEach((fn) => { fn(); });
   }, [handleNew, handleOpen, handleSave, handleSaveAs]);
 
   // Keyboard shortcuts
@@ -190,7 +190,7 @@ function App(): React.JSX.Element {
       .getRecentFiles()
       .then(setRecentFiles)
       .catch(() => {});
-  }, [ontology]);
+  }, []);
 
   const handleOpenRecent = useCallback(
     async (filePath: string) => {
@@ -273,6 +273,7 @@ function App(): React.JSX.Element {
                         {recentFiles.slice(0, 5).map((fp) => (
                           <button
                             key={fp}
+                            type="button"
                             onClick={() => handleOpenRecent(fp)}
                             className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-secondary/60 transition-colors truncate"
                             title={fp}
@@ -355,8 +356,8 @@ function App(): React.JSX.Element {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 max-h-48 overflow-y-auto text-sm">
-            {importWarnings.map((w, i) => (
-              <div key={i} className="flex items-start gap-2">
+            {importWarnings.map((w) => (
+              <div key={w.message} className="flex items-start gap-2">
                 {w.severity === 'error' ? (
                   <CircleAlert className="size-4 shrink-0 mt-0.5 text-destructive" />
                 ) : (

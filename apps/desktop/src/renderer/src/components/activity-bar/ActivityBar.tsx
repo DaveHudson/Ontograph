@@ -19,6 +19,7 @@ export function ActivityBar({ activeTab, onTabChange }: ActivityBarProps): React
       {TABS.map(({ id, icon, label }) => (
         <button
           key={id}
+          type="button"
           title={label}
           onClick={() => onTabChange(id)}
           className={cn(

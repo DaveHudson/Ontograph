@@ -70,7 +70,7 @@ export function ontologyToReactFlowElements(
     const range = localName(prop.range);
     for (const domainUri of prop.domain) {
       if (!dtPropsByDomain.has(domainUri)) dtPropsByDomain.set(domainUri, []);
-      dtPropsByDomain.get(domainUri)!.push({ uri: prop.uri, label, range });
+      dtPropsByDomain.get(domainUri)?.push({ uri: prop.uri, label, range });
     }
   }
 

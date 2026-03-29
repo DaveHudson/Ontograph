@@ -47,10 +47,11 @@ export function ChatThreadList({
         const isActive = thread.id === activeThreadId;
 
         return (
-          <div
+          <button
             key={thread.id}
+            type="button"
             className={cn(
-              'group relative px-3 py-2.5 cursor-pointer border-b border-border/50',
+              'group relative w-full text-left px-3 py-2.5 cursor-pointer border-b border-border/50',
               'hover:bg-secondary/60 transition-colors',
               isActive && 'bg-secondary/40',
             )}
@@ -110,7 +111,7 @@ export function ChatThreadList({
                 )}
               </div>
             </div>
-          </div>
+          </button>
         );
       })}
     </div>

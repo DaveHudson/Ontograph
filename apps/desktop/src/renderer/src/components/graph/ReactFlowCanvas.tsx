@@ -109,7 +109,7 @@ function GraphFlow(): React.JSX.Element {
   // Reset sidecar check whenever a new file is loaded
   useEffect(() => {
     firstLoadRef.current = true;
-  }, [filePath]);
+  }, []);
 
   // Direct layout runner — always uses current nodes, edges, and layout params.
   // On first load, tries to restore positions from sidecar; if the sidecar covers
@@ -141,7 +141,9 @@ function GraphFlow(): React.JSX.Element {
           const positions = await runLayout(currentNodes, currentEdges, graphLayoutRef.current);
           if (positions.length === 0) return;
           const posMap = new Map(positions.map((p) => [p.id, { x: p.x, y: p.y }]));
-          Object.entries(sidecar.positions).forEach(([id, pos]) => posMap.set(id, pos));
+          Object.entries(sidecar.positions).forEach(([id, pos]) => {
+            posMap.set(id, pos);
+          });
           setNodes((prev) =>
             prev.map((n) => {
               const pos = posMap.get(n.id);
@@ -231,7 +233,8 @@ function GraphFlow(): React.JSX.Element {
       );
       setEdges(newEdges);
     }
-  }, [ontology, validationErrors]);
+  }, [ontology, validationErrors, setEdges, // Data-only change: update node data without repositioning
+      setNodes]);
 
   // Compute adjacency when selection changes
   useEffect(() => {
@@ -256,7 +259,7 @@ function GraphFlow(): React.JSX.Element {
     setFocusNode(null);
     setSelectedNode(focusNodeId);
     fitView({ nodes: [{ id: focusNodeId }], duration: 350, maxZoom: 2, padding: 0.3 });
-  }, [focusNodeId]);
+  }, [focusNodeId, fitView, setFocusNode, setSelectedNode]);
 
   // Filter edges based on visibility settings
   const visibleEdges = edges.filter((e) => {
@@ -387,7 +390,9 @@ function GraphFlow(): React.JSX.Element {
               label: `Delete ${currentSelection.length} classes`,
               destructive: true,
               action: () => {
-                currentSelection.forEach((id) => removeClass(id));
+                currentSelection.forEach((id) => {
+                  removeClass(id);
+                });
                 clearMultiSelect();
               },
             },
@@ -489,7 +494,7 @@ function GraphFlow(): React.JSX.Element {
         items.push({
           label: 'Delete property',
           destructive: true,
-          action: () => removeObjectProperty(edge.data!.uri as string),
+          action: () => removeObjectProperty(edge.data?.uri as string),
         });
       }
       if (items.length > 0) {
@@ -579,7 +584,9 @@ function GraphFlow(): React.JSX.Element {
         const ids = useUIStore.getState().selectedNodeIds;
         if (ids.length === 0) return;
         e.preventDefault();
-        ids.forEach((id) => removeClass(id));
+        ids.forEach((id) => {
+          removeClass(id);
+        });
         clearMultiSelect();
       }
     }

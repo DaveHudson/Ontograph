@@ -39,9 +39,9 @@ export function ValidationPanel(): React.JSX.Element {
         {warnCount > 0 && <span>{warnCount} warnings</span>}
       </div>
       <div className="max-h-40 overflow-y-auto">
-        {errors.map((error, i) => (
+        {errors.map((error) => (
           <Button
-            key={i}
+            key={`${error.elementUri}-${error.message}`}
             variant="ghost"
             className="w-full justify-start px-3 h-auto py-1.5 gap-2 items-start rounded-none text-xs font-normal"
             onClick={() => handleClick(error)}

@@ -104,9 +104,10 @@ export function StatusBar(): React.JSX.Element {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0 w-80" side="top" align="end">
-              {errors.map((error, i) => (
+              {errors.map((error) => (
                 <button
-                  key={i}
+                  key={`${error.elementUri}-${error.message}`}
+                  type="button"
                   onClick={() => handleErrorClick(error)}
                   className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex gap-2 items-start border-b border-border last:border-0 text-xs"
                 >
@@ -134,6 +135,7 @@ export function StatusBar(): React.JSX.Element {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
+                type="button"
                 onClick={toggleAnalytics}
                 className="flex items-center gap-1 hover:text-foreground transition-colors"
               >

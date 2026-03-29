@@ -212,8 +212,8 @@ export function useClaude(): UseClaudeReturn {
       }),
     ];
 
-    return () => cleanups.forEach((fn) => fn());
-  }, [store]);
+    return () => cleanups.forEach((fn) => { fn(); });
+  }, []);
 
   const sendMessage = useCallback(
     (message: string, context?: string) => {

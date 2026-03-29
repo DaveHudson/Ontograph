@@ -32,7 +32,7 @@ export function ImprovementHUD(): React.JSX.Element | null {
       window.api.onClaudeResult(() => finishImprovements()),
       window.api.onClaudeError(() => finishImprovements()),
     ];
-    return () => cleanups.forEach((fn) => fn());
+    return () => cleanups.forEach((fn) => { fn(); });
   }, [improvementStatus, handleText, finishImprovements]);
 
   if (improvementStatus === 'idle') return null;
@@ -49,6 +49,7 @@ export function ImprovementHUD(): React.JSX.Element | null {
         </div>
         {improvementStatus === 'complete' && (
           <button
+            type="button"
             onClick={dismissImprovements}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -67,8 +68,8 @@ export function ImprovementHUD(): React.JSX.Element | null {
 
       {/* Items */}
       <div className="p-2 space-y-1 max-h-64 overflow-y-auto">
-        {improvementItems.map((item, i) => (
-          <div key={i} className="flex items-start gap-2 px-1 py-0.5">
+        {improvementItems.map((item) => (
+          <div key={item.text} className="flex items-start gap-2 px-1 py-0.5">
             <div className="shrink-0 mt-0.5">
               <StatusIcon status={item.status} />
             </div>

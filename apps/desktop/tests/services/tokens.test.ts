@@ -7,7 +7,7 @@ describe('estimateTokenCount', () => {
   });
 
   it('returns 0 for falsy input', () => {
-    expect(estimateTokenCount(undefined as any)).toBe(0);
+    expect(estimateTokenCount(undefined as unknown as string)).toBe(0);
   });
 
   it('estimates tokens for short text', () => {

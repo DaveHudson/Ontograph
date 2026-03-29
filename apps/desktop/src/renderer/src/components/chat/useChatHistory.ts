@@ -42,7 +42,7 @@ function saveThreads(threads: ChatThread[]): void {
 }
 
 function titleFromMessage(message: string): string {
-  return message.length > 50 ? message.slice(0, 50) + '…' : message;
+  return message.length > 50 ? `${message.slice(0, 50)}…` : message;
 }
 
 export interface UseChatHistoryReturn {

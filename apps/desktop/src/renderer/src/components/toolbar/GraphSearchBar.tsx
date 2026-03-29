@@ -78,7 +78,7 @@ export function GraphSearchBar(): React.JSX.Element {
     setResults(matches.slice(0, 10));
     setActiveIndex(0);
     setOpen(matches.length > 0);
-  }, [query, classes]);
+  }, [query, classes, ontology.objectProperties.values]);
 
   // Click outside to close
   useEffect(() => {
@@ -134,6 +134,7 @@ export function GraphSearchBar(): React.JSX.Element {
         />
         {query && (
           <button
+            type="button"
             onClick={() => {
               setQuery('');
               setOpen(false);
@@ -150,6 +151,7 @@ export function GraphSearchBar(): React.JSX.Element {
           {results.map((r, i) => (
             <button
               key={r.id}
+              type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => selectNode(r.id)}
               className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${

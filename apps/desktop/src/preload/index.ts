@@ -120,8 +120,8 @@ if (process.contextIsolated) {
     console.error(error);
   }
 } else {
-  // @ts-ignore
+  // @ts-expect-error
   window.electron = electronAPI;
-  // @ts-ignore
+  // @ts-expect-error
   window.api = api;
 }

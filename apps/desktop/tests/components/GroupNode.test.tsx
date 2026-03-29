@@ -58,7 +58,7 @@ describe('GroupNode', () => {
         targetPosition={undefined}
       />,
     );
-    const style = container.firstElementChild!.getAttribute('style')!;
+    const style = container.firstElementChild?.getAttribute('style') ?? '';
     expect(style).toContain('opacity: 0.2');
   });
 
@@ -81,7 +81,7 @@ describe('GroupNode', () => {
         targetPosition={undefined}
       />,
     );
-    const style = container.firstElementChild!.getAttribute('style')!;
+    const style = container.firstElementChild?.getAttribute('style') ?? '';
     expect(style).not.toContain('opacity: 0.2');
   });
 });

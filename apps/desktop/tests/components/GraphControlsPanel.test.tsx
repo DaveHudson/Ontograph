@@ -41,7 +41,7 @@ describe('GraphControlsPanel', () => {
     const onClose = vi.fn();
     render(<GraphControlsPanel onClose={onClose} />);
     // Find the close button (it's the first icon button in the header)
-    const closeBtn = screen.getByText('Graph Controls').parentElement!.querySelector('button')!;
+    const closeBtn = screen.getByText('Graph Controls').parentElement?.querySelector('button') as HTMLButtonElement;
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalled();
   });

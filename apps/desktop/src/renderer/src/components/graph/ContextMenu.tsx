@@ -47,12 +47,12 @@ export function ContextMenu({ x, y, items, onClose }: Props): React.JSX.Element 
       exit={{ opacity: 0, scale: 0.95, y: -4 }}
       transition={{ duration: 0.1, ease: 'easeOut' }}
     >
-      {items.map((item, i) =>
+      {items.map((item) =>
         item.separator ? (
-          <Separator key={i} className="my-1" />
+          <Separator key={`sep-${item.label}`} className="my-1" />
         ) : (
           <Button
-            key={i}
+            key={item.label}
             variant="ghost"
             className={`w-full justify-start px-3 h-8 rounded-none text-sm font-normal ${item.destructive ? 'text-destructive-foreground hover:text-destructive-foreground' : ''}`}
             onClick={() => {

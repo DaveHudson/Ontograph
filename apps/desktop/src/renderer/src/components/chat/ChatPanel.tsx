@@ -59,7 +59,7 @@ export function ChatPanel(): React.JSX.Element {
       setMessages(thread.messages);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [history.getActiveThread, setMessages]);
 
   // Auto-save messages to active thread when messages change
   useEffect(() => {
@@ -137,7 +137,7 @@ export function ChatPanel(): React.JSX.Element {
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = `${el.scrollHeight}px`;
-  }, [input]);
+  }, []);
 
   const selectedNodeId = useUIStore((s) => s.selectedNodeId);
   const selectedEdgeId = useUIStore((s) => s.selectedEdgeId);
@@ -176,7 +176,7 @@ export function ChatPanel(): React.JSX.Element {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, []);
 
   const handleSubmit = (e?: React.FormEvent): void => {
     e?.preventDefault();
@@ -255,8 +255,8 @@ export function ChatPanel(): React.JSX.Element {
                 </EmptyHeader>
               </Empty>
             )}
-            {messages.map((msg, i) => (
-              <MessageBubble key={i} message={msg} />
+            {messages.map((msg) => (
+              <MessageBubble key={`${msg.role}-${msg.content.slice(0, 40)}`} message={msg} />
             ))}
             {isLoading && (
               <div className="flex gap-1 items-center text-xs text-muted-foreground">
@@ -274,6 +274,7 @@ export function ChatPanel(): React.JSX.Element {
                 <span className="opacity-60">{selectionContext.type === 'class' ? '◆' : '→'}</span>
                 <span className="truncate">{selectionContext.label}</span>
                 <button
+                  type="button"
                   onClick={() =>
                     selectionContext.type === 'class'
                       ? setSelectedNode(null)

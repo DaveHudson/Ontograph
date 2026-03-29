@@ -53,12 +53,14 @@ export function ConsentBanner() {
       </p>
       <div className="flex gap-2">
         <button
+          type="button"
           onClick={accept}
           className="flex-1 rounded-lg bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity"
         >
           Accept
         </button>
         <button
+          type="button"
           onClick={decline}
           className="flex-1 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
