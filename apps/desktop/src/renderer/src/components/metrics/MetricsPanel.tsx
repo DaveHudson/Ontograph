@@ -1,7 +1,7 @@
+import { computeMetrics } from '@renderer/services/metrics';
+import { useOntologyStore } from '@renderer/store/ontology';
 import { BarChart3, TriangleAlert } from 'lucide-react';
 import { useMemo } from 'react';
-import { useOntologyStore } from '@renderer/store/ontology';
-import { computeMetrics } from '@renderer/services/metrics';
 import {
   Empty,
   EmptyDescription,

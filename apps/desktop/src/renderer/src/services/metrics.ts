@@ -77,7 +77,7 @@ export function computeMetrics(ontology: Ontology): OntologyMetrics {
   // Max hierarchy depth — cycle-safe longest path to root per class
   const depthCache = new Map<string, number>();
   function maxDepthOf(uri: string, visiting: Set<string>): number {
-    if (depthCache.has(uri)) return depthCache.get(uri)!;
+    if (depthCache.has(uri)) return depthCache.get(uri) as number;
     const cls = classes.get(uri);
     if (!cls || cls.subClassOf.length === 0) {
       depthCache.set(uri, 0);
@@ -168,8 +168,9 @@ export function computeMetrics(ontology: Ontology): OntologyMetrics {
 
   function find(x: string): string {
     while (parent.get(x) !== x) {
-      parent.set(x, parent.get(parent.get(x)!)!);
-      x = parent.get(x)!;
+      const grandparent = parent.get(parent.get(x) as string) as string;
+      parent.set(x, grandparent);
+      x = parent.get(x) as string;
     }
     return x;
   }
