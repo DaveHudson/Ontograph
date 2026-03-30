@@ -267,7 +267,7 @@ function App(): React.JSX.Element {
                     Where knowledge takes shape
                   </p>
                   <p className="text-sm mb-4">
-                    Open a .ttl file or start chatting with Claude to create an ontology
+                    Open an ontology (.ttl, .rdf, .owl) or start chatting with Claude to create one
                   </p>
                   <Button onClick={() => loadFromTurtle(peopleTtl, 'Sample: people.ttl')}>
                     Load sample ontology
