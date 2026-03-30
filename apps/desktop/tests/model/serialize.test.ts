@@ -110,7 +110,11 @@ describe('serializeToTurtle — determinism', () => {
     // Insert classes in opposite order
     const classA = { uri: `${EX}Alpha`, subClassOf: [], disjointWith: [] };
     const classB = { uri: `${EX}Beta`, label: 'Beta', subClassOf: [], disjointWith: [] };
-    const classC = { uri: `${EX}Charlie`, subClassOf: [`${EX}Alpha`, `${EX}Beta`], disjointWith: [] };
+    const classC = {
+      uri: `${EX}Charlie`,
+      subClassOf: [`${EX}Alpha`, `${EX}Beta`],
+      disjointWith: [],
+    };
 
     ont1.classes.set(classA.uri, classA);
     ont1.classes.set(classB.uri, classB);

@@ -35,8 +35,8 @@ export function serializeToTurtle(ontology: Ontology): string {
     for (const imp of [...ontology.ontologyMetadata.imports].sort()) {
       writer.addQuad(subject, namedNode(`${OWL}imports`), namedNode(imp));
     }
-    for (const ann of [...ontology.ontologyMetadata.annotations].sort((a, b) =>
-      a.property.localeCompare(b.property) || a.value.localeCompare(b.value),
+    for (const ann of [...ontology.ontologyMetadata.annotations].sort(
+      (a, b) => a.property.localeCompare(b.property) || a.value.localeCompare(b.value),
     )) {
       if (ann.datatype) {
         writer.addQuad(
@@ -141,13 +141,13 @@ export function serializeToTurtle(ontology: Ontology): string {
     if (ind.comment) {
       writer.addQuad(subject, namedNode(`${RDFS}comment`), literal(ind.comment));
     }
-    for (const assertion of [...ind.objectPropertyAssertions].sort((a, b) =>
-      a.property.localeCompare(b.property) || a.target.localeCompare(b.target),
+    for (const assertion of [...ind.objectPropertyAssertions].sort(
+      (a, b) => a.property.localeCompare(b.property) || a.target.localeCompare(b.target),
     )) {
       writer.addQuad(subject, namedNode(assertion.property), namedNode(assertion.target));
     }
-    for (const assertion of [...ind.dataPropertyAssertions].sort((a, b) =>
-      a.property.localeCompare(b.property) || a.value.localeCompare(b.value),
+    for (const assertion of [...ind.dataPropertyAssertions].sort(
+      (a, b) => a.property.localeCompare(b.property) || a.value.localeCompare(b.value),
     )) {
       if (assertion.datatype) {
         writer.addQuad(
