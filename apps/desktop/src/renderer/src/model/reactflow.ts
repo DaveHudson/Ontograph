@@ -136,30 +136,16 @@ export function ontologyToReactFlowElements(
         data: { label: 'disjointWith' },
       });
     }
-
-    // Restriction edges for someValuesFrom / allValuesFrom targeting other classes
-    if (cls.restrictions) {
-      for (const r of cls.restrictions) {
-        if (r.type !== 'someValuesFrom' && r.type !== 'allValuesFrom') continue;
-        // Only create edge if the target is a known class
-        if (!ontology.classes.has(r.value)) continue;
-        const qualifier = r.type === 'someValuesFrom' ? 'some' : 'only';
-        edges.push({
-          id: `restriction-${cls.uri}-${r.onProperty}-${r.type}-${r.value}`,
-          source: cls.uri,
-          target: r.value,
-          type: 'restriction',
-          data: { label: `${localName(r.onProperty)} [${qualifier}]`, qualifier },
-        });
-      }
-    }
   }
 
-  // Object property edges
+  // Build set of (source, target, property) tuples covered by object property edges
+  // so restriction edges can skip duplicates
+  const objPropEdgePairs = new Set<string>();
   for (const prop of ontology.objectProperties.values()) {
     const label = prop.label || localName(prop.uri);
     for (const domainUri of prop.domain) {
       for (const rangeUri of prop.range) {
+        objPropEdgePairs.add(`${domainUri}|${rangeUri}|${prop.uri}`);
         edges.push({
           id: `objprop-${prop.uri}-${domainUri}-${rangeUri}`,
           source: domainUri,
@@ -168,6 +154,25 @@ export function ontologyToReactFlowElements(
           data: { label, uri: prop.uri },
         });
       }
+    }
+  }
+
+  // Restriction edges for someValuesFrom / allValuesFrom targeting other classes
+  // Skip when an object property edge already covers the same source→target→property
+  for (const cls of ontology.classes.values()) {
+    if (!cls.restrictions) continue;
+    for (const r of cls.restrictions) {
+      if (r.type !== 'someValuesFrom' && r.type !== 'allValuesFrom') continue;
+      if (!ontology.classes.has(r.value)) continue;
+      if (objPropEdgePairs.has(`${cls.uri}|${r.value}|${r.onProperty}`)) continue;
+      const qualifier = r.type === 'someValuesFrom' ? 'some' : 'only';
+      edges.push({
+        id: `restriction-${cls.uri}-${r.onProperty}-${r.type}-${r.value}`,
+        source: cls.uri,
+        target: r.value,
+        type: 'restriction',
+        data: { label: `${localName(r.onProperty)} [${qualifier}]`, qualifier },
+      });
     }
   }
 
