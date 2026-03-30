@@ -333,11 +333,7 @@ export function parseTurtleWithWarnings(turtle: string): ParseResult {
 
   // Detect unsupported OWL constructs
   const unsupported = new Set<string>();
-  const UNSUPPORTED_TYPES = [
-    `${OWL}AllDifferent`,
-    `${OWL}AnnotationProperty`,
-    `${OWL}Ontology`,
-  ];
+  const UNSUPPORTED_TYPES = [`${OWL}AllDifferent`, `${OWL}AnnotationProperty`, `${OWL}Ontology`];
   for (const quad of quads) {
     if (quad.predicate.value === `${RDF}type` && UNSUPPORTED_TYPES.includes(quad.object.value)) {
       const name = quad.object.value.split('#').pop() || quad.object.value;
