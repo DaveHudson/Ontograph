@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "bash e2e/runner.sh",
+    "test:e2e:playwright": "playwright test",
     "build:win": "bun run build && electron-builder --win --config",
     "build:mac": "bun run build && electron-builder --mac --config",
     "build:linux": "bun run build && electron-builder --linux --config",
@@ -65,6 +66,7 @@
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",
+    "@playwright/test": "^1.58.2",
     "@storybook/addon-essentials": "8",
     "@storybook/react": "8",
     "@storybook/react-vite": "8",
@@ -82,6 +84,7 @@
     "electron-builder": "^26.0.12",
     "electron-vite": "5",
     "jsdom": "^29.0.1",
+    "playwright": "^1.58.2",
     "storybook": "8",
     "typescript": "^5.8.3",
     "vite": "^7.0.0",

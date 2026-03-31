@@ -67,3 +67,48 @@ jobs:
 
       - name: Run E2E tests
         run: cd apps/web && npx playwright test
+
+  e2e-electron:
+    name: Electron E2E (Playwright)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Electron system dependencies (Linux)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 \
+            libxrandr2 libgbm1 libasound2t64 libpango-1.0-0 libcairo2 \
+            libx11-xcb1 xvfb
+
+      - name: Build desktop app
+        run: bun run build --filter=@ontograph/desktop
+
+      - name: Install Playwright Electron browsers
+        run: cd apps/desktop && npx playwright install chromium --with-deps
+
+      - name: Run Electron E2E tests
+        run: cd apps/desktop && xvfb-run --auto-servernum npx playwright test
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-electron-report
+          path: apps/desktop/test-results/
+          retention-days: 14
