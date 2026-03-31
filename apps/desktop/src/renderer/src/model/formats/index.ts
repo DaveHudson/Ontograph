@@ -28,8 +28,18 @@ export function getAdapterForExtension(ext: string): FormatAdapter | undefined {
 }
 
 export function getAdapterForFilePath(filePath: string): FormatAdapter | undefined {
-  const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
+  const dotIndex = filePath.lastIndexOf('.');
+  if (dotIndex === -1) return undefined;
+  const ext = filePath.substring(dotIndex).toLowerCase();
   return getAdapterForExtension(ext);
+}
+
+export function sniffAdapterFromContent(content: string): FormatAdapter | null {
+  const head = content.slice(0, 200);
+  if (head.includes('@prefix') || head.includes('@base')) return turtleAdapter;
+  if (head.includes('<?xml') || head.includes('<rdf:RDF')) return rdfXmlAdapter;
+  if (/"@context"/.test(head) && head.trimStart().startsWith('{')) return jsonLdAdapter;
+  return null;
 }
 
 export function getAllSupportedExtensions(): string[] {

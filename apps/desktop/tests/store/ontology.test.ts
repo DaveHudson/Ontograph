@@ -298,4 +298,31 @@ describe('useOntologyStore', () => {
       expect(exported).toContain('NamedIndividual');
     });
   });
+
+  describe('loadFromFile — content sniffing', () => {
+    it('loads a .ttl file by extension and sets sourceFormat', async () => {
+      await useOntologyStore.getState().loadFromFile(SAMPLE_TURTLE, '/test.ttl');
+      const { sourceFormat, ontology } = useOntologyStore.getState();
+      expect(sourceFormat).toBe('text/turtle');
+      expect(ontology.classes.size).toBeGreaterThanOrEqual(3);
+    });
+
+    it('sniffs Turtle from content when extension is missing', async () => {
+      await useOntologyStore.getState().loadFromFile(SAMPLE_TURTLE, '/unknown-file');
+      const { sourceFormat } = useOntologyStore.getState();
+      expect(sourceFormat).toBe('text/turtle');
+    });
+
+    it('throws FORMAT_UNKNOWN when content and extension are unrecognised', async () => {
+      await expect(
+        useOntologyStore.getState().loadFromFile('just random text', '/mystery.dat'),
+      ).rejects.toThrow('FORMAT_UNKNOWN');
+    });
+
+    it('clears sourceFormat on reset', async () => {
+      await useOntologyStore.getState().loadFromFile(SAMPLE_TURTLE, '/test.ttl');
+      useOntologyStore.getState().reset();
+      expect(useOntologyStore.getState().sourceFormat).toBeNull();
+    });
+  });
 });
