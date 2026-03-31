@@ -67,7 +67,7 @@ export const ObjectPropertyEdge = memo(function ObjectPropertyEdge({
 
   // Stagger badge rows when multiple edges share the same source→target pair,
   // so they don't overlap. Sort by id for a stable, deterministic order.
-  const peerEdges = allEdges
+  const peerEdges = (allEdges as ObjPropEdge[])
     .filter((e) => e.source === source && e.target === target && e.data?.characteristics?.length)
     .sort((a, b) => a.id.localeCompare(b.id));
   const badgeStagger = peerEdges.findIndex((e) => e.id === id);
