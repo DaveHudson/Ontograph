@@ -57,9 +57,9 @@ export const ObjectPropertyEdge = memo(function ObjectPropertyEdge({
     targetY: ty,
     targetPosition,
   });
-
   const isAdjacent = adjacentEdgeIds.includes(id);
   const isDimmed = selectedNodeId !== null && !isAdjacent;
+  const isSelfLoop = source === target;
   const color = 'var(--graph-edge-property)';
   const markerId = `objprop-arrow-${id}`;
   const rotation = autoRotation(sx, sy, tx, ty);
@@ -125,7 +125,7 @@ export const ObjectPropertyEdge = memo(function ObjectPropertyEdge({
               transform: `translate(-50%, -50%) translate(${badgeX}px, ${badgeY}px) rotate(${rotation}deg)`,
               display: 'flex',
               gap: 2,
-              opacity: isDimmed ? 0.15 : 1,
+              opacity: isSelfLoop && !selected ? 0 : isDimmed ? 0.15 : 1,
               transition: 'opacity 0.15s ease',
               pointerEvents: 'none',
             }}
