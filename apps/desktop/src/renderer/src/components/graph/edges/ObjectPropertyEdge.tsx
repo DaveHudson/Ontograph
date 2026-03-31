@@ -109,7 +109,7 @@ export const ObjectPropertyEdge = memo(function ObjectPropertyEdge({
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY + 18}px) rotate(${rotation}deg)`,
+              transform: `translate(-50%, -50%) translate(${labelX + 18 * Math.sin(rotation * (Math.PI / 180))}px, ${labelY + 18 * Math.cos(rotation * (Math.PI / 180))}px) rotate(${rotation}deg)`,
               display: 'flex',
               gap: 2,
               opacity: isDimmed ? 0.15 : 1,
