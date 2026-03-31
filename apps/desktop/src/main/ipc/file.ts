@@ -74,6 +74,7 @@ export function registerFileIPC(): void {
     const result = await dialog.showSaveDialog(win, {
       filters: [
         { name: 'Turtle', extensions: ['ttl'] },
+        { name: 'RDF/XML', extensions: ['rdf', 'owl'] },
         { name: 'All Files', extensions: ['*'] },
       ],
       defaultPath: 'ontology.ttl',
@@ -84,6 +85,22 @@ export function registerFileIPC(): void {
     await writeFile(result.filePath, content, 'utf-8');
     addRecentFile(result.filePath);
     return result.filePath;
+  });
+
+  ipcMain.handle('file:save-as-dialog', async () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return null;
+
+    const result = await dialog.showSaveDialog(win, {
+      filters: [
+        { name: 'Turtle', extensions: ['ttl'] },
+        { name: 'RDF/XML', extensions: ['rdf', 'owl'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+      defaultPath: 'ontology.ttl',
+    });
+
+    return result.canceled || !result.filePath ? null : result.filePath;
   });
 
   ipcMain.handle('file:recent-files', () => {

@@ -24,6 +24,7 @@ const api = {
     ipcRenderer.invoke('file:save', filePath, content),
   saveFileAs: (content: string): Promise<string | null> =>
     ipcRenderer.invoke('file:save-as', content),
+  saveFileAsDialog: (): Promise<string | null> => ipcRenderer.invoke('file:save-as-dialog'),
   readFileSilent: (filePath: string): Promise<string | null> =>
     ipcRenderer.invoke('file:read-silent', filePath),
   getRecentFiles: (): Promise<string[]> => ipcRenderer.invoke('file:recent-files'),

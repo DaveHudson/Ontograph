@@ -15,6 +15,7 @@ declare global {
       openFile: () => Promise<{ filePath: string; content: string } | null>;
       saveFile: (filePath: string, content: string) => Promise<boolean>;
       saveFileAs: (content: string) => Promise<string | null>;
+      saveFileAsDialog: () => Promise<string | null>;
       readFileSilent: (filePath: string) => Promise<string | null>;
       getRecentFiles: () => Promise<string[]>;
       openRecentFile: (filePath: string) => Promise<{ filePath: string; content: string } | null>;

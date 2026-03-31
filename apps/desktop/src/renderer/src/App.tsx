@@ -49,7 +49,7 @@ function App(): React.JSX.Element {
   const ontology = useOntologyStore((s) => s.ontology);
   const loadFromFile = useOntologyStore((s) => s.loadFromFile);
   const loadFromTurtle = useOntologyStore((s) => s.loadFromTurtle);
-  const exportToTurtle = useOntologyStore((s) => s.exportToTurtle);
+  const serializeForFilePath = useOntologyStore((s) => s.serializeForFilePath);
   const setFilePath = useOntologyStore((s) => s.setFilePath);
   const markClean = useOntologyStore((s) => s.markClean);
   const isDirty = useOntologyStore((s) => s.isDirty);
@@ -78,28 +78,31 @@ function App(): React.JSX.Element {
   }, [loadFromFile]);
 
   const doSave = useCallback(async () => {
-    const turtle = exportToTurtle();
     const currentPath = useOntologyStore.getState().filePath;
     if (currentPath && !currentPath.startsWith('sample://') && !currentPath.startsWith('Sample:')) {
-      await window.api.saveFile(currentPath, turtle);
+      const content = serializeForFilePath(currentPath);
+      await window.api.saveFile(currentPath, content);
       markClean();
     } else {
-      const newPath = await window.api.saveFileAs(turtle);
+      const newPath = await window.api.saveFileAsDialog();
       if (newPath) {
+        const content = serializeForFilePath(newPath);
+        await window.api.saveFile(newPath, content);
         setFilePath(newPath);
         markClean();
       }
     }
-  }, [exportToTurtle, setFilePath, markClean]);
+  }, [serializeForFilePath, setFilePath, markClean]);
 
   const doSaveAs = useCallback(async () => {
-    const turtle = exportToTurtle();
-    const newPath = await window.api.saveFileAs(turtle);
+    const newPath = await window.api.saveFileAsDialog();
     if (newPath) {
+      const content = serializeForFilePath(newPath);
+      await window.api.saveFile(newPath, content);
       setFilePath(newPath);
       markClean();
     }
-  }, [exportToTurtle, setFilePath, markClean]);
+  }, [serializeForFilePath, setFilePath, markClean]);
 
   const handleSave = useCallback(async () => {
     const errors = validateOntology(useOntologyStore.getState().ontology);

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { track } from '../lib/analytics';
 import { getAdapterForFilePath } from '../model/formats';
+import { serializeToRdfXml } from '../model/formats/rdfxml';
 import { type ParseWarning, parseTurtleWithWarnings } from '../model/parse';
 import { serializeToTurtle } from '../model/serialize';
 import type {
@@ -23,6 +24,7 @@ interface OntologyState {
   loadFromTurtle: (turtle: string, filePath?: string) => void;
   clearImportWarnings: () => void;
   exportToTurtle: () => string;
+  serializeForFilePath: (filePath: string) => string;
   reset: () => void;
   setFilePath: (path: string | null) => void;
   markClean: () => void;
@@ -86,6 +88,15 @@ export const useOntologyStore = create<OntologyState>((set, get) => ({
   exportToTurtle: () => {
     track('ontology_exported', { classCount: get().ontology.classes.size });
     return serializeToTurtle(get().ontology);
+  },
+
+  serializeForFilePath: (filePath) => {
+    const ontology = get().ontology;
+    const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
+    const isRdfXml = ext === '.rdf' || ext === '.owl';
+    const format = isRdfXml ? 'rdf+xml' : 'turtle';
+    track('ontology_exported', { classCount: ontology.classes.size, format });
+    return isRdfXml ? serializeToRdfXml(ontology) : serializeToTurtle(ontology);
   },
 
   reset: () => {
