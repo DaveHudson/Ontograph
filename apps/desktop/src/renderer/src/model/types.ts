@@ -36,6 +36,18 @@ export interface Restriction {
   value: string;
 }
 
+export type ClassExpression =
+  | { kind: 'named'; uri: string }
+  | { kind: 'union'; operands: ClassExpression[] }
+  | { kind: 'intersection'; operands: ClassExpression[] }
+  | { kind: 'complement'; operand: ClassExpression }
+  | { kind: 'unknown'; reason: string };
+
+export interface ClassExpressionAssertion {
+  source: 'equivalentClass' | 'subClassOf';
+  expression: ClassExpression;
+}
+
 export interface OntologyClass {
   uri: string;
   label?: string;
@@ -43,6 +55,7 @@ export interface OntologyClass {
   subClassOf: string[];
   disjointWith: string[];
   restrictions?: Restriction[];
+  classExpressions?: ClassExpressionAssertion[];
 }
 
 export type OWLCharacteristic =
