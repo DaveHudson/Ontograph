@@ -1,21 +1,18 @@
-import { _electron as electron, expect, test } from '@playwright/test';
-import { ELECTRON_MAIN } from '../playwright.config';
+import { expect, test } from '@playwright/test';
+import { launchElectron } from './electron-launch';
 
 test.describe('Ontology CRUD', () => {
-  let electronApp: Awaited<ReturnType<typeof electron.launch>>;
+  let electronApp: Awaited<ReturnType<typeof launchElectron>>;
   let page: Awaited<ReturnType<typeof electronApp.firstWindow>>;
 
   test.beforeAll(async () => {
-    electronApp = await electron.launch({
-      args: [ELECTRON_MAIN],
-      env: { ...process.env, NODE_ENV: 'test' },
-    });
+    electronApp = await launchElectron();
     page = await electronApp.firstWindow();
     await page.waitForLoadState('domcontentloaded');
   });
 
   test.afterAll(async () => {
-    await electronApp.close();
+    await electronApp?.close();
   });
 
   test('empty state is shown on launch', async () => {

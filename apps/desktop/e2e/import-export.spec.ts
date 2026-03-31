@@ -1,5 +1,5 @@
-import { _electron as electron, expect, test } from '@playwright/test';
-import { ELECTRON_MAIN } from '../playwright.config';
+import { expect, test } from '@playwright/test';
+import { launchElectron } from './electron-launch';
 
 const SAMPLE_TTL = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -14,14 +14,11 @@ ex:Gadget a owl:Class ;
     rdfs:subClassOf ex:Widget .`;
 
 test.describe('Import / Export', () => {
-  let electronApp: Awaited<ReturnType<typeof electron.launch>>;
+  let electronApp: Awaited<ReturnType<typeof launchElectron>>;
   let page: Awaited<ReturnType<typeof electronApp.firstWindow>>;
 
   test.beforeAll(async () => {
-    electronApp = await electron.launch({
-      args: [ELECTRON_MAIN],
-      env: { ...process.env, NODE_ENV: 'test' },
-    });
+    electronApp = await launchElectron();
     page = await electronApp.firstWindow();
     await page.waitForLoadState('domcontentloaded');
 
@@ -34,7 +31,7 @@ test.describe('Import / Export', () => {
   });
 
   test.afterAll(async () => {
-    await electronApp.close();
+    await electronApp?.close();
   });
 
   test('sample ontology classes are visible', async () => {
