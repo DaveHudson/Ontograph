@@ -25,10 +25,9 @@ test.describe('App Launch', () => {
   });
 
   test('main content area renders', async () => {
-    // Either empty-state buttons or graph canvas elements should be present
-    const hasOpen = await page.getByRole('button', { name: /open/i }).count();
-    const hasPaste = await page.getByRole('button', { name: /paste/i }).count();
-    const hasGraph = await page.locator('.react-flow, [data-testid="graph-canvas"]').count();
-    expect(hasOpen + hasPaste + hasGraph).toBeGreaterThan(0);
+    // Empty state shows "Load sample ontology"; graph state shows .react-flow container
+    const hasEmptyState = await page.getByText('Load sample ontology').count();
+    const hasGraph = await page.locator('.react-flow').count();
+    expect(hasEmptyState + hasGraph).toBeGreaterThan(0);
   });
 });
