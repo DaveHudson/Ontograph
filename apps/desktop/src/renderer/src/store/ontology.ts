@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { track } from '../lib/analytics';
-import { getAdapterForFilePath } from '../model/formats';
+import { getAdapterForFilePath, sniffAdapterFromContent } from '../model/formats';
 import { serializeToRdfXml } from '../model/formats/rdfxml';
 import { type ParseWarning, parseTurtleWithWarnings } from '../model/parse';
 import { serializeToTurtle } from '../model/serialize';
@@ -18,6 +18,7 @@ interface OntologyState {
   filePath: string | null;
   isDirty: boolean;
   importWarnings: ParseWarning[];
+  sourceFormat: string | null;
 
   // Actions
   loadFromFile: (content: string, filePath: string) => Promise<void>;
@@ -58,21 +59,29 @@ export const useOntologyStore = create<OntologyState>((set, get) => ({
   filePath: null,
   isDirty: false,
   importWarnings: [],
+  sourceFormat: null,
 
   loadFromFile: async (content, filePath) => {
-    const adapter = getAdapterForFilePath(filePath);
-    const result = adapter?.parseAsync
-      ? await adapter.parseAsync(content)
-      : adapter
-        ? adapter.parse(content)
-        : parseTurtleWithWarnings(content);
+    let adapter = getAdapterForFilePath(filePath);
+    if (!adapter) {
+      const sniffed = sniffAdapterFromContent(content);
+      if (!sniffed) throw new Error('FORMAT_UNKNOWN');
+      adapter = sniffed;
+    }
+    const result = adapter.parseAsync ? await adapter.parseAsync(content) : adapter.parse(content);
     const { ontology, warnings } = result;
-    set({ ontology, filePath, isDirty: false, importWarnings: warnings });
+    set({
+      ontology,
+      filePath,
+      isDirty: false,
+      importWarnings: warnings,
+      sourceFormat: adapter.mimeType,
+    });
     track('ontology_loaded', {
       classCount: ontology.classes.size,
       individualCount: ontology.individuals.size,
       source: 'file',
-      format: filePath.substring(filePath.lastIndexOf('.')).toLowerCase(),
+      format: adapter.mimeType,
     });
   },
 

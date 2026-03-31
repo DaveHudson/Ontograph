@@ -39,6 +39,7 @@ import {
 } from './components/ui/empty';
 import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
+import { getAdapterForFilePath } from './model/formats';
 import peopleTtl from './samples/people.ttl?raw';
 import { validateOntology } from './services/validation';
 import { useHistoryStore } from './store/history';
@@ -69,40 +70,76 @@ function App(): React.JSX.Element {
   const pendingSaveRef = useRef<'save' | 'saveAs' | null>(null);
   const [showGraphControls, setShowGraphControls] = useState(false);
   const [recentFiles, setRecentFiles] = useState<string[]>([]);
+  const [showFormatUnknown, setShowFormatUnknown] = useState(false);
+  const [showConversionWarning, setShowConversionWarning] = useState(false);
+  const pendingConversionActionRef = useRef<(() => Promise<void>) | null>(null);
 
   const handleOpen = useCallback(async () => {
     const result = await window.api.openFile();
     if (result) {
-      await loadFromFile(result.content, result.filePath);
+      try {
+        await loadFromFile(result.content, result.filePath);
+      } catch (e) {
+        if (e instanceof Error && e.message === 'FORMAT_UNKNOWN') {
+          setShowFormatUnknown(true);
+        } else {
+          throw e;
+        }
+      }
     }
   }, [loadFromFile]);
+
+  const checkConversionWarning = useCallback(
+    (targetPath: string, actualSave: () => Promise<void>): boolean => {
+      const { importWarnings: warnings, sourceFormat: srcFmt } = useOntologyStore.getState();
+      if (warnings.length > 0 && srcFmt) {
+        const targetAdapter = getAdapterForFilePath(targetPath);
+        if (targetAdapter && targetAdapter.mimeType !== srcFmt) {
+          pendingConversionActionRef.current = actualSave;
+          setShowConversionWarning(true);
+          return true;
+        }
+      }
+      return false;
+    },
+    [],
+  );
 
   const doSave = useCallback(async () => {
     const currentPath = useOntologyStore.getState().filePath;
     if (currentPath && !currentPath.startsWith('sample://') && !currentPath.startsWith('Sample:')) {
-      const content = await serializeForFilePath(currentPath);
-      await window.api.saveFile(currentPath, content);
-      markClean();
+      const actualSave = async (): Promise<void> => {
+        const content = await serializeForFilePath(currentPath);
+        await window.api.saveFile(currentPath, content);
+        markClean();
+      };
+      if (!checkConversionWarning(currentPath, actualSave)) await actualSave();
     } else {
       const newPath = await window.api.saveFileAsDialog();
       if (newPath) {
-        const content = await serializeForFilePath(newPath);
-        await window.api.saveFile(newPath, content);
-        setFilePath(newPath);
-        markClean();
+        const actualSave = async (): Promise<void> => {
+          const content = await serializeForFilePath(newPath);
+          await window.api.saveFile(newPath, content);
+          setFilePath(newPath);
+          markClean();
+        };
+        if (!checkConversionWarning(newPath, actualSave)) await actualSave();
       }
     }
-  }, [serializeForFilePath, setFilePath, markClean]);
+  }, [serializeForFilePath, setFilePath, markClean, checkConversionWarning]);
 
   const doSaveAs = useCallback(async () => {
     const newPath = await window.api.saveFileAsDialog();
     if (newPath) {
-      const content = await serializeForFilePath(newPath);
-      await window.api.saveFile(newPath, content);
-      setFilePath(newPath);
-      markClean();
+      const actualSave = async (): Promise<void> => {
+        const content = await serializeForFilePath(newPath);
+        await window.api.saveFile(newPath, content);
+        setFilePath(newPath);
+        markClean();
+      };
+      if (!checkConversionWarning(newPath, actualSave)) await actualSave();
     }
-  }, [serializeForFilePath, setFilePath, markClean]);
+  }, [serializeForFilePath, setFilePath, markClean, checkConversionWarning]);
 
   const handleSave = useCallback(async () => {
     const errors = validateOntology(useOntologyStore.getState().ontology);
@@ -209,7 +246,15 @@ function App(): React.JSX.Element {
     async (filePath: string) => {
       const result = await window.api.openRecentFile(filePath);
       if (result) {
-        await loadFromFile(result.content, result.filePath);
+        try {
+          await loadFromFile(result.content, result.filePath);
+        } catch (e) {
+          if (e instanceof Error && e.message === 'FORMAT_UNKNOWN') {
+            setShowFormatUnknown(true);
+          } else {
+            throw e;
+          }
+        }
       }
     },
     [loadFromFile],
@@ -409,6 +454,63 @@ function App(): React.JSX.Element {
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleForceSave}>
+              Save anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showFormatUnknown} onOpenChange={setShowFormatUnknown}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cannot determine format</DialogTitle>
+            <DialogDescription>
+              The file format could not be detected from its extension or content. Please ensure the
+              file is a valid Turtle, RDF/XML, or JSON-LD ontology.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowFormatUnknown(false)}>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showConversionWarning} onOpenChange={setShowConversionWarning}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Format conversion warning</DialogTitle>
+            <DialogDescription>
+              The following constructs could not be fully represented when the file was parsed and
+              will not be preserved in the exported file:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-48 overflow-y-auto text-sm">
+            {importWarnings.map((w) => (
+              <div key={w.message} className="flex items-start gap-2">
+                <TriangleAlert className="size-4 shrink-0 mt-0.5 text-warning" />
+                <span>{w.message}</span>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowConversionWarning(false);
+                pendingConversionActionRef.current = null;
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                setShowConversionWarning(false);
+                if (pendingConversionActionRef.current) {
+                  await pendingConversionActionRef.current();
+                  pendingConversionActionRef.current = null;
+                }
+              }}
+            >
               Save anyway
             </Button>
           </DialogFooter>
