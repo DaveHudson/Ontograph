@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { parseRdfXmlWithWarnings } from '@renderer/model/formats/rdfxml';
+import { parseRdfXmlWithWarnings, serializeToRdfXml } from '@renderer/model/formats/rdfxml';
 import { parseTurtleWithWarnings } from '@renderer/model/parse';
 import type { DatatypeProperty, ObjectProperty, OntologyClass } from '@renderer/model/types';
+import { createEmptyOntology } from '@renderer/model/types';
 import { describe, expect, it } from 'vitest';
 
 const EX = 'http://example.org/ontology#';
@@ -100,5 +101,97 @@ describe('parseRdfXml', () => {
     expect([...rdfOnt.datatypeProperties.keys()].sort()).toEqual(
       [...ttlOnt.datatypeProperties.keys()].sort(),
     );
+  });
+});
+
+const individualsRdf = readFileSync(
+  resolve(__dirname, '../../resources/sample-ontologies/individuals.ttl'),
+  'utf-8',
+);
+
+describe('serializeToRdfXml', () => {
+  it('round-trips: parse RDF/XML → serialize → reparse preserves classes', () => {
+    const { ontology: original } = parseRdfXmlWithWarnings(peopleRdf);
+    const serialized = serializeToRdfXml(original);
+    const { ontology: reparsed } = parseRdfXmlWithWarnings(serialized);
+
+    expect(reparsed.classes.size).toBe(original.classes.size);
+    for (const [uri, cls] of original.classes) {
+      const reparsedCls = reparsed.classes.get(uri) as OntologyClass;
+      expect(reparsedCls).toBeDefined();
+      expect(reparsedCls.label).toBe(cls.label);
+      expect(reparsedCls.comment).toBe(cls.comment);
+      expect(reparsedCls.subClassOf.sort()).toEqual(cls.subClassOf.sort());
+    }
+  });
+
+  it('round-trips: preserves object properties', () => {
+    const { ontology: original } = parseRdfXmlWithWarnings(peopleRdf);
+    const serialized = serializeToRdfXml(original);
+    const { ontology: reparsed } = parseRdfXmlWithWarnings(serialized);
+
+    expect(reparsed.objectProperties.size).toBe(original.objectProperties.size);
+    for (const [uri, prop] of original.objectProperties) {
+      const reparsedProp = reparsed.objectProperties.get(uri) as ObjectProperty;
+      expect(reparsedProp).toBeDefined();
+      expect(reparsedProp.label).toBe(prop.label);
+      expect(reparsedProp.domain.sort()).toEqual(prop.domain.sort());
+      expect(reparsedProp.range.sort()).toEqual(prop.range.sort());
+      expect(reparsedProp.inverseOf).toBe(prop.inverseOf);
+    }
+  });
+
+  it('round-trips: preserves datatype properties', () => {
+    const { ontology: original } = parseRdfXmlWithWarnings(peopleRdf);
+    const serialized = serializeToRdfXml(original);
+    const { ontology: reparsed } = parseRdfXmlWithWarnings(serialized);
+
+    expect(reparsed.datatypeProperties.size).toBe(original.datatypeProperties.size);
+    for (const [uri, prop] of original.datatypeProperties) {
+      const reparsedProp = reparsed.datatypeProperties.get(uri) as DatatypeProperty;
+      expect(reparsedProp).toBeDefined();
+      expect(reparsedProp.label).toBe(prop.label);
+      expect(reparsedProp.domain.sort()).toEqual(prop.domain.sort());
+      expect(reparsedProp.range).toBe(prop.range);
+    }
+  });
+
+  it('produces valid XML with rdf:RDF root', () => {
+    const { ontology } = parseRdfXmlWithWarnings(peopleRdf);
+    const serialized = serializeToRdfXml(ontology);
+    expect(serialized).toMatch(/^<\?xml version="1\.0"/);
+    expect(serialized).toContain('<rdf:RDF');
+    expect(serialized).toContain('</rdf:RDF>');
+  });
+
+  it('produces no errors when reparsing serialized output', () => {
+    const { ontology } = parseRdfXmlWithWarnings(peopleRdf);
+    const serialized = serializeToRdfXml(ontology);
+    const { warnings } = parseRdfXmlWithWarnings(serialized);
+    expect(warnings.filter((w) => w.severity === 'error')).toHaveLength(0);
+  });
+
+  it('serializes empty ontology without errors', () => {
+    const empty = createEmptyOntology();
+    const serialized = serializeToRdfXml(empty);
+    const { warnings } = parseRdfXmlWithWarnings(serialized);
+    expect(warnings.filter((w) => w.severity === 'error')).toHaveLength(0);
+  });
+
+  it('is deterministic', () => {
+    const { ontology } = parseRdfXmlWithWarnings(peopleRdf);
+    expect(serializeToRdfXml(ontology)).toBe(serializeToRdfXml(ontology));
+  });
+
+  it('round-trips Turtle→RDF/XML: parse Turtle, serialize as RDF/XML, reparse', () => {
+    const { ontology: ttlOnt } = parseTurtleWithWarnings(individualsRdf);
+    const serialized = serializeToRdfXml(ttlOnt);
+    const { ontology: reparsed, warnings } = parseRdfXmlWithWarnings(serialized);
+
+    expect(warnings.filter((w) => w.severity === 'error')).toHaveLength(0);
+    expect(reparsed.classes.size).toBe(ttlOnt.classes.size);
+    expect(reparsed.individuals.size).toBe(ttlOnt.individuals.size);
+    expect(reparsed.objectProperties.size).toBe(ttlOnt.objectProperties.size);
+    expect(reparsed.datatypeProperties.size).toBe(ttlOnt.datatypeProperties.size);
   });
 });
