@@ -114,7 +114,7 @@ export const useOntologyStore = create<OntologyState>((set, get) => ({
   },
 
   reset: () => {
-    set({ ontology: createEmptyOntology(), filePath: null, isDirty: false });
+    set({ ontology: createEmptyOntology(), filePath: null, isDirty: false, sourceFormat: null });
   },
 
   setFilePath: (path) => set({ filePath: path }),
