@@ -2,7 +2,7 @@ import { useUIStore } from '@renderer/store/ui';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock @xyflow/react — component uses BaseEdge, EdgeLabelRenderer, getBezierPath, useInternalNode
+// Mock @xyflow/react — component uses BaseEdge, EdgeLabelRenderer, getBezierPath, useInternalNode, useEdges
 vi.mock('@xyflow/react', () => ({
   BaseEdge: ({ id }: { id: string }) => <path data-testid={`base-edge-${id}`} />,
   EdgeLabelRenderer: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -14,6 +14,7 @@ vi.mock('@xyflow/react', () => ({
     },
     measured: { width: 100, height: 40 },
   })),
+  useEdges: vi.fn(() => []),
   Position: { Left: 'left', Top: 'top', Right: 'right', Bottom: 'bottom' },
 }));
 

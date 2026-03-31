@@ -7,6 +7,7 @@ import {
   EdgeLabelRenderer,
   type EdgeProps,
   getBezierPath,
+  useEdges,
   useInternalNode,
 } from '@xyflow/react';
 import { memo } from 'react';
@@ -39,6 +40,7 @@ export const ObjectPropertyEdge = memo(function ObjectPropertyEdge({
   const targetNode = useInternalNode(target);
   const selectedNodeId = useUIStore((s) => s.selectedNodeId);
   const adjacentEdgeIds = useUIStore((s) => s.adjacentEdgeIds);
+  const allEdges = useEdges();
 
   if (!sourceNode || !targetNode) return null;
 
@@ -62,6 +64,17 @@ export const ObjectPropertyEdge = memo(function ObjectPropertyEdge({
   const markerId = `objprop-arrow-${id}`;
   const rotation = autoRotation(sx, sy, tx, ty);
   const uniqueCharacteristics = [...new Set(data?.characteristics ?? [])];
+
+  // Stagger badge rows when multiple edges share the same source→target pair,
+  // so they don't overlap. Sort by id for a stable, deterministic order.
+  const peerEdges = allEdges
+    .filter((e) => e.source === source && e.target === target && e.data?.characteristics?.length)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const badgeStagger = peerEdges.findIndex((e) => e.id === id);
+  const staggerDist = badgeStagger * 14;
+  const rotRad = rotation * (Math.PI / 180);
+  const badgeX = labelX + (18 + staggerDist) * Math.sin(rotRad);
+  const badgeY = labelY + (18 + staggerDist) * Math.cos(rotRad);
 
   return (
     <>
@@ -109,7 +122,7 @@ export const ObjectPropertyEdge = memo(function ObjectPropertyEdge({
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX + 18 * Math.sin(rotation * (Math.PI / 180))}px, ${labelY + 18 * Math.cos(rotation * (Math.PI / 180))}px) rotate(${rotation}deg)`,
+              transform: `translate(-50%, -50%) translate(${badgeX}px, ${badgeY}px) rotate(${rotation}deg)`,
               display: 'flex',
               gap: 2,
               opacity: isDimmed ? 0.15 : 1,
