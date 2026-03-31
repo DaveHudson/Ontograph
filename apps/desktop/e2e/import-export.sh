@@ -18,11 +18,8 @@ mkdir -p "$SCREENSHOT_DIR"
 # ── Part 1: Verify sample ontology classes are visible ───────────────────────
 # The ontology-crud suite should have loaded the sample, but guard here.
 if ! agent-browser wait --text "Person" 2>/dev/null; then
-  # Nothing loaded — try the "Load sample ontology" button
-  SNAPSHOT=$(agent-browser snapshot -i 2>/dev/null || echo "")
-  LOAD_REF=$(echo "$SNAPSHOT" | grep -i "Load sample" | grep -oE '@e[0-9]+' | head -1)
-  if [[ -n "$LOAD_REF" ]]; then
-    agent-browser click "$LOAD_REF"
+  # Nothing loaded — try the "Load sample ontology" button via semantic locator
+  if agent-browser find text "Load sample ontology" click 2>/dev/null; then
     agent-browser wait --text "Person" \
       || fail "Sample ontology failed to load"
     pass "Loaded sample ontology for import-export suite"
@@ -56,7 +53,8 @@ agent-browser clipboard write "$SAMPLE_TTL" \
   || skip "Clipboard write not available; skipping TTL paste test"
 
 # Focus the renderer and paste (Cmd+V on macOS, Ctrl+V elsewhere)
-agent-browser click "body" 2>/dev/null || true
+# Click on the graph canvas area — use JS to focus the document body
+agent-browser evaluate "document.body.click()" 2>/dev/null || true
 if [[ "$(uname)" == "Darwin" ]]; then
   agent-browser keyboard type "" 2>/dev/null || true
   agent-browser press "Meta+v" 2>/dev/null \

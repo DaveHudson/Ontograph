@@ -16,8 +16,9 @@ else
 fi
 
 # 2. Main UI should be visible — toolbar renders at top of the app
-#    We wait for a known landmark: the theme toggle button title attr
-agent-browser wait --text "Toggle theme" 2>/dev/null \
+#    The theme toggle button has title="Toggle theme" (no visible text — icon only),
+#    so we check via JS DOM query rather than --text which matches visible content.
+agent-browser wait --fn "!!document.querySelector('[title=\"Toggle theme\"]')" 2>/dev/null \
   || fail "Toolbar 'Toggle theme' button did not appear within timeout"
 pass "Toolbar visible"
 

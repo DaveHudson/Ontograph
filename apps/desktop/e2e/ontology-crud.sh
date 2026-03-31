@@ -17,17 +17,9 @@ agent-browser wait --text "Load sample ontology" \
   || fail "'Load sample ontology' button not found — empty state may not be showing"
 pass "Empty state visible"
 
-# 2. Get snapshot to find the "Load sample ontology" button ref
-SNAPSHOT=$(agent-browser snapshot -i)
-LOAD_SAMPLE_REF=$(echo "$SNAPSHOT" | grep -i "Load sample" | grep -oE '@e[0-9]+' | head -1)
-
-if [[ -z "$LOAD_SAMPLE_REF" ]]; then
-  fail "Could not find 'Load sample ontology' button ref in snapshot"
-fi
-pass "Found 'Load sample ontology' button at $LOAD_SAMPLE_REF"
-
-# 3. Click it to load the sample People ontology
-agent-browser click "$LOAD_SAMPLE_REF"
+# 2. Click "Load sample ontology" via semantic locator (no snapshot-ref parsing needed)
+agent-browser find text "Load sample ontology" click \
+  || fail "Could not find/click 'Load sample ontology' button"
 pass "Clicked 'Load sample ontology'"
 
 # 4. Wait for graph canvas to appear — sample ontology has "Person" class
@@ -46,12 +38,10 @@ agent-browser screenshot --screenshot-dir "$SCREENSHOT_DIR" 2>/dev/null \
   || pass "Screenshot skipped (non-fatal)"
 
 # 7. Search functionality — use the search bar to find a specific node
-SEARCH_REF=$(agent-browser snapshot -i | grep -i "Search\|search" | grep -oE '@e[0-9]+' | head -1)
-if [[ -n "$SEARCH_REF" ]]; then
-  agent-browser fill "$SEARCH_REF" "Person"
+#    Toolbar input has placeholder="Search label, URI, comment…"
+if agent-browser find placeholder "Search label" fill "Person" 2>/dev/null; then
   pass "Search bar accepts input"
-  # Clear search
-  agent-browser fill "$SEARCH_REF" ""
+  agent-browser find placeholder "Search label" fill "" 2>/dev/null || true
 else
-  pass "Search bar test skipped (ref not found)"
+  pass "Search bar test skipped (non-fatal)"
 fi
