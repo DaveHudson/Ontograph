@@ -1,6 +1,8 @@
 import type { Quad } from 'n3';
 import type {
   AnnotationProperty,
+  ClassExpression,
+  ClassExpressionAssertion,
   DatatypeProperty,
   Individual,
   ObjectProperty,
@@ -93,6 +95,11 @@ function getOrCreateAnnotationProperty(ontology: Ontology, uri: string): Annotat
   return prop;
 }
 
+function localName(uri: string): string {
+  const idx = Math.max(uri.lastIndexOf('#'), uri.lastIndexOf('/'));
+  return idx >= 0 ? uri.substring(idx + 1) : uri;
+}
+
 export interface ParseWarning {
   message: string;
   severity: 'error' | 'warning';
@@ -118,12 +125,17 @@ export function walkQuads(quads: Quad[], prefixes?: Map<string, string>): WalkQu
 
   // Collect OWL characteristic type tokens per URI (order-independent)
   const pendingCharacteristics = new Map<string, OWLCharacteristic[]>();
+  const quadsBySubject = new Map<string, Quad[]>();
 
   // First pass: collect type declarations
   for (const quad of quads) {
     const s = quad.subject.value;
     const p = quad.predicate.value;
     const o = quad.object.value;
+
+    const bySubject = quadsBySubject.get(s);
+    if (bySubject) bySubject.push(quad);
+    else quadsBySubject.set(s, [quad]);
 
     if (p === `${RDF}type`) {
       if (!declaredTypes.has(s)) declaredTypes.set(s, new Set());
@@ -135,7 +147,7 @@ export function walkQuads(quads: Quad[], prefixes?: Map<string, string>): WalkQu
         pendingCharacteristics.get(s)?.push(charToken);
       }
 
-      if (o === `${OWL}Class`) {
+      if (o === `${OWL}Class` && quad.subject.termType === 'NamedNode') {
         getOrCreateClass(ontology, s);
       } else if (o === `${OWL}ObjectProperty`) {
         getOrCreateObjectProperty(ontology, s);
@@ -221,6 +233,123 @@ export function walkQuads(quads: Quad[], prefixes?: Map<string, string>): WalkQu
       entry.value = o;
       restrictionProps.set(s, entry);
     }
+  }
+
+  const expressionCache = new Map<string, ClassExpression | null>();
+
+  function pushWarning(message: string): void {
+    warnings.push({ severity: 'warning', message });
+  }
+
+  function ensureClassExpression(cls: OntologyClass, assertion: ClassExpressionAssertion): void {
+    if (!cls.classExpressions) cls.classExpressions = [];
+    cls.classExpressions.push(assertion);
+  }
+
+  function parseExpressionTerm(
+    term: Quad['object'],
+    trace: Set<string>,
+    context: string,
+  ): ClassExpression | null {
+    if (term.termType === 'NamedNode') {
+      return { kind: 'named', uri: term.value };
+    }
+    if (term.termType !== 'BlankNode') {
+      pushWarning(`Malformed class expression for ${context}: unsupported term "${term.value}"`);
+      return { kind: 'unknown', reason: `Unsupported term ${term.termType}` };
+    }
+    return parseExpressionNode(term.value, trace, context);
+  }
+
+  function parseRdfList(
+    head: string,
+    trace: Set<string>,
+    context: string,
+    visited: Set<string> = new Set(),
+  ): ClassExpression[] | null {
+    if (head === `${RDF}nil`) return [];
+    if (visited.has(head)) {
+      pushWarning(`Malformed RDF list cycle in class expression for ${context}`);
+      return null;
+    }
+    visited.add(head);
+
+    const listQuads = quadsBySubject.get(head) ?? [];
+    const firstQuads = listQuads.filter((q) => q.predicate.value === `${RDF}first`);
+    const restQuads = listQuads.filter((q) => q.predicate.value === `${RDF}rest`);
+    if (firstQuads.length === 0 || restQuads.length === 0) {
+      pushWarning(`Malformed RDF list in class expression for ${context}`);
+      return null;
+    }
+
+    const first = parseExpressionTerm(firstQuads[0].object, trace, context);
+    if (!first) return null;
+    const rest = restQuads[0].object;
+    if (rest.termType !== 'NamedNode' && rest.termType !== 'BlankNode') {
+      pushWarning(`Malformed RDF list in class expression for ${context}`);
+      return null;
+    }
+    const tail = parseRdfList(rest.value, trace, context, visited);
+    if (!tail) return null;
+    return [first, ...tail];
+  }
+
+  function parseExpressionNode(
+    nodeId: string,
+    trace: Set<string>,
+    context: string,
+  ): ClassExpression | null {
+    if (trace.has(nodeId)) {
+      pushWarning(`Malformed class expression cycle for ${context}`);
+      return null;
+    }
+    const cached = expressionCache.get(nodeId);
+    if (cached !== undefined) return cached;
+
+    trace.add(nodeId);
+    const nodeQuads = quadsBySubject.get(nodeId) ?? [];
+
+    const union = nodeQuads.find((q) => q.predicate.value === `${OWL}unionOf`);
+    if (union) {
+      const operands = parseRdfList(union.object.value, trace, context);
+      const expr = operands
+        ? ({ kind: 'union', operands } as ClassExpression)
+        : ({ kind: 'unknown', reason: 'Malformed unionOf list' } as ClassExpression);
+      expressionCache.set(nodeId, expr);
+      trace.delete(nodeId);
+      return expr;
+    }
+
+    const intersection = nodeQuads.find((q) => q.predicate.value === `${OWL}intersectionOf`);
+    if (intersection) {
+      const operands = parseRdfList(intersection.object.value, trace, context);
+      const expr = operands
+        ? ({ kind: 'intersection', operands } as ClassExpression)
+        : ({ kind: 'unknown', reason: 'Malformed intersectionOf list' } as ClassExpression);
+      expressionCache.set(nodeId, expr);
+      trace.delete(nodeId);
+      return expr;
+    }
+
+    const complement = nodeQuads.find((q) => q.predicate.value === `${OWL}complementOf`);
+    if (complement) {
+      const operand = parseExpressionTerm(complement.object, trace, context);
+      const expr = operand
+        ? ({ kind: 'complement', operand } as ClassExpression)
+        : ({ kind: 'unknown', reason: 'Malformed complementOf target' } as ClassExpression);
+      expressionCache.set(nodeId, expr);
+      trace.delete(nodeId);
+      return expr;
+    }
+
+    pushWarning(`Malformed class expression node for ${context}: ${localName(nodeId)}`);
+    const expr: ClassExpression = {
+      kind: 'unknown',
+      reason: `Unsupported expression node ${nodeId}`,
+    };
+    expressionCache.set(nodeId, expr);
+    trace.delete(nodeId);
+    return expr;
   }
 
   // Second pass: process properties and relationships
@@ -333,24 +462,39 @@ export function walkQuads(quads: Quad[], prefixes?: Map<string, string>): WalkQu
         }
         continue;
       }
+      if (quad.object.termType === 'BlankNode') {
+        const expr = parseExpressionTerm(quad.object, new Set(), s);
+        if (expr) {
+          const cls = getOrCreateClass(ontology, s);
+          ensureClassExpression(cls, { source: 'subClassOf', expression: expr });
+        }
+        continue;
+      }
       const cls = getOrCreateClass(ontology, s);
-      getOrCreateClass(ontology, o);
+      if (quad.object.termType === 'NamedNode') getOrCreateClass(ontology, o);
       if (!cls.subClassOf.includes(o)) {
         cls.subClassOf.push(o);
       }
       continue;
     }
 
+    if (p === `${OWL}equivalentClass`) {
+      const cls = getOrCreateClass(ontology, s);
+      const expr = parseExpressionTerm(quad.object, new Set(), s);
+      if (expr) ensureClassExpression(cls, { source: 'equivalentClass', expression: expr });
+      continue;
+    }
+
     if (p === `${OWL}disjointWith`) {
       const cls = getOrCreateClass(ontology, s);
-      if (!cls.disjointWith.includes(o)) {
+      if (quad.object.termType === 'NamedNode' && !cls.disjointWith.includes(o)) {
         cls.disjointWith.push(o);
       }
       continue;
     }
 
     if (p === `${RDFS}domain`) {
-      getOrCreateClass(ontology, o);
+      if (quad.object.termType === 'NamedNode') getOrCreateClass(ontology, o);
       const objProp = ontology.objectProperties.get(s);
       const dtProp = ontology.datatypeProperties.get(s);
       if (objProp) {
@@ -365,8 +509,10 @@ export function walkQuads(quads: Quad[], prefixes?: Map<string, string>): WalkQu
       const objProp = ontology.objectProperties.get(s);
       const dtProp = ontology.datatypeProperties.get(s);
       if (objProp) {
-        getOrCreateClass(ontology, o);
-        if (!objProp.range.includes(o)) objProp.range.push(o);
+        if (quad.object.termType === 'NamedNode') {
+          getOrCreateClass(ontology, o);
+          if (!objProp.range.includes(o)) objProp.range.push(o);
+        }
       } else if (dtProp) {
         dtProp.range = o;
       } else if (isDatatypeURI(o)) {

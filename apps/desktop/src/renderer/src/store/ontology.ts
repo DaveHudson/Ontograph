@@ -5,6 +5,7 @@ import { serializeToRdfXml } from '../model/formats/rdfxml';
 import { type ParseWarning, parseTurtleWithWarnings } from '../model/parse';
 import { serializeToTurtle } from '../model/serialize';
 import type {
+  ClassExpression,
   DatatypeProperty,
   Individual,
   ObjectProperty,
@@ -287,7 +288,16 @@ function cloneOntology(ontology: Ontology): Ontology {
     classes: new Map(
       Array.from(ontology.classes.entries()).map(([k, v]) => [
         k,
-        { ...v, subClassOf: [...v.subClassOf], disjointWith: [...v.disjointWith] },
+        {
+          ...v,
+          subClassOf: [...v.subClassOf],
+          disjointWith: [...v.disjointWith],
+          restrictions: v.restrictions?.map((r) => ({ ...r })),
+          classExpressions: v.classExpressions?.map((a) => ({
+            source: a.source,
+            expression: cloneClassExpression(a.expression),
+          })),
+        },
       ]),
     ),
     objectProperties: new Map(
@@ -327,4 +337,21 @@ function cloneOntology(ontology: Ontology): Ontology {
         }
       : undefined,
   };
+}
+
+function cloneClassExpression(expr: ClassExpression): ClassExpression {
+  switch (expr.kind) {
+    case 'named':
+      return { kind: 'named', uri: expr.uri };
+    case 'union':
+      return { kind: 'union', operands: expr.operands.map(cloneClassExpression) };
+    case 'intersection':
+      return { kind: 'intersection', operands: expr.operands.map(cloneClassExpression) };
+    case 'complement':
+      return { kind: 'complement', operand: cloneClassExpression(expr.operand) };
+    case 'unknown':
+      return { kind: 'unknown', reason: expr.reason };
+    default:
+      return expr satisfies never;
+  }
 }

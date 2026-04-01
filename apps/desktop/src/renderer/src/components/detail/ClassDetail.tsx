@@ -1,6 +1,13 @@
-import type { DatatypeProperty, OntologyClass, Restriction } from '@renderer/model/types';
+import type {
+  ClassExpression,
+  ClassExpressionAssertion,
+  DatatypeProperty,
+  OntologyClass,
+  Restriction,
+} from '@renderer/model/types';
 import { useOntologyStore } from '@renderer/store/ontology';
 import { useUIStore } from '@renderer/store/ui';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -44,6 +51,11 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
   const updateDatatypeProperty = useOntologyStore((s) => s.updateDatatypeProperty);
   const ontology = useOntologyStore((s) => s.ontology);
   const setFocusNode = useUIStore((s) => s.setFocusNode);
+  const setSelectedNode = useUIStore((s) => s.setSelectedNode);
+  const focusClass = (uri: string): void => {
+    setSelectedNode(uri);
+    setFocusNode(uri);
+  };
 
   const dtProps = Array.from(ontology.datatypeProperties.values()).filter((p) =>
     p.domain.includes(cls.uri),
@@ -92,7 +104,7 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
                 type="button"
                 key={uri}
                 className="text-xs bg-secondary rounded px-2 py-1 cursor-pointer hover:bg-accent transition-colors flex items-center gap-1.5 group"
-                onClick={() => setFocusNode(uri)}
+                onClick={() => focusClass(uri)}
               >
                 <span className="text-primary underline underline-offset-2 decoration-primary/40 group-hover:decoration-primary transition-colors">
                   {ontology.classes.get(uri)?.label || localName(uri)}
@@ -136,7 +148,7 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
                         type="button"
                         key={r}
                         className="text-primary underline underline-offset-2 decoration-primary/40 hover:decoration-primary cursor-pointer transition-colors"
-                        onClick={() => setFocusNode(r)}
+                        onClick={() => focusClass(r)}
                       >
                         {ontology.classes.get(r)?.label || localName(r)}
                       </button>
@@ -151,7 +163,7 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
                         type="button"
                         key={d}
                         className="text-primary underline underline-offset-2 decoration-primary/40 hover:decoration-primary cursor-pointer transition-colors"
-                        onClick={() => setFocusNode(d)}
+                        onClick={() => focusClass(d)}
                       >
                         {ontology.classes.get(d)?.label || localName(d)}
                       </button>
@@ -173,9 +185,39 @@ export function ClassDetail({ cls }: Props): React.JSX.Element {
                 key={`${r.onProperty}-${r.type}-${r.value}`}
                 restriction={r}
                 ontology={ontology}
-                onFocus={setFocusNode}
+                onFocus={focusClass}
               />
             ))}
+          </div>
+        </div>
+      )}
+
+      {cls.classExpressions && cls.classExpressions.length > 0 && (
+        <div className="space-y-2">
+          <div>
+            <div className="text-xs text-muted-foreground mb-0.5">Class Expressions</div>
+            <div className="text-xs text-muted-foreground">Logical definitions for this class</div>
+          </div>
+          <div className="space-y-2">
+            {(() => {
+              const seen = new Map<string, number>();
+              return cls.classExpressions.map((assertion) => {
+                const base = `${assertion.source}:${classExpressionKey(assertion.expression)}`;
+                const count = seen.get(base) ?? 0;
+                seen.set(base, count + 1);
+                return (
+                  <ClassExpressionRow
+                    key={`${base}:${count}`}
+                    assertion={assertion}
+                    ontology={ontology}
+                    onFocus={focusClass}
+                  />
+                );
+              });
+            })()}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            EQUIV = equivalent class · OR = union · AND = intersection · NOT = complement
           </div>
         </div>
       )}
@@ -277,6 +319,136 @@ function formatRestrictionLabel(r: Restriction): { text: string; targetUri?: str
       return { text: `${prop} [${r.value}..${r.value}]` };
     default:
       return { text: `${prop} ${r.type} ${localName(r.value)}` };
+  }
+}
+
+function ClassExpressionRow({
+  assertion,
+  ontology,
+  onFocus,
+}: {
+  assertion: ClassExpressionAssertion;
+  ontology: import('@renderer/model/types').Ontology;
+  onFocus: (uri: string) => void;
+}): React.JSX.Element {
+  return (
+    <div className="rounded-md border border-border/60 bg-secondary/40 p-2">
+      <div className="space-y-1.5">
+        {assertion.source === 'equivalentClass' ? (
+          <div className="flex items-center gap-1.5">
+            <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
+              EQUIV
+            </Badge>
+            <ClassExpressionTree
+              expression={assertion.expression}
+              ontology={ontology}
+              onFocus={onFocus}
+            />
+          </div>
+        ) : (
+          <ClassExpressionTree
+            expression={assertion.expression}
+            ontology={ontology}
+            onFocus={onFocus}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ClassExpressionTree({
+  expression,
+  ontology,
+  onFocus,
+}: {
+  expression: ClassExpression;
+  ontology: import('@renderer/model/types').Ontology;
+  onFocus: (uri: string) => void;
+}): React.JSX.Element {
+  if (expression.kind === 'named') {
+    const label = ontology.classes.get(expression.uri)?.label || localName(expression.uri);
+    return (
+      <button
+        type="button"
+        className="text-xs bg-secondary rounded px-2 py-1 cursor-pointer hover:bg-accent transition-colors"
+        onClick={() => onFocus(expression.uri)}
+      >
+        {label}
+      </button>
+    );
+  }
+
+  if (expression.kind === 'unknown') {
+    return (
+      <div className="flex items-center gap-1.5">
+        <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">
+          Warning
+        </Badge>
+        <span className="text-xs text-muted-foreground">{expression.reason}</span>
+      </div>
+    );
+  }
+
+  if (expression.kind === 'complement') {
+    return (
+      <div className="space-y-1">
+        <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
+          NOT
+        </Badge>
+        <div className="ml-3 border-l border-border/60 pl-2">
+          <ClassExpressionTree
+            expression={expression.operand}
+            ontology={ontology}
+            onFocus={onFocus}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const operator = expression.kind === 'union' ? 'OR' : 'AND';
+  return (
+    <div className="space-y-1">
+      <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
+        {operator}
+      </Badge>
+      <div className="ml-3 border-l border-border/60 pl-2 space-y-1">
+        {(() => {
+          const seen = new Map<string, number>();
+          return expression.operands.map((operand) => {
+            const base = classExpressionKey(operand);
+            const count = seen.get(base) ?? 0;
+            seen.set(base, count + 1);
+            return (
+              <ClassExpressionTree
+                key={`${base}:${count}`}
+                expression={operand}
+                ontology={ontology}
+                onFocus={onFocus}
+              />
+            );
+          });
+        })()}
+      </div>
+    </div>
+  );
+}
+
+function classExpressionKey(expression: ClassExpression): string {
+  switch (expression.kind) {
+    case 'named':
+      return `named:${expression.uri}`;
+    case 'union':
+      return `union(${expression.operands.map(classExpressionKey).join('|')})`;
+    case 'intersection':
+      return `intersection(${expression.operands.map(classExpressionKey).join('|')})`;
+    case 'complement':
+      return `complement(${classExpressionKey(expression.operand)})`;
+    case 'unknown':
+      return `unknown:${expression.reason}`;
+    default:
+      return expression satisfies never;
   }
 }
 
