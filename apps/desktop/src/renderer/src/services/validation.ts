@@ -170,6 +170,106 @@ export function validateOntology(ontology: Ontology): ValidationError[] {
     }
   }
 
+  // OWL consistency checks (semantic contradictions)
+  errors.push(...checkOWLConsistency(ontology));
+
+  return errors;
+}
+
+/**
+ * Detects semantic contradictions that make classes logically unsatisfiable:
+ * 1. Self-disjoint: A disjointWith A
+ * 2. Subclass-disjoint conflict: A subClassOf B AND A disjointWith B
+ * 3. Multiple inheritance from mutually disjoint ancestors: A subClassOf B, A subClassOf C, B disjointWith C
+ * 4. Functional property with minCardinality > 1
+ */
+function checkOWLConsistency(ontology: Ontology): ValidationError[] {
+  const errors: ValidationError[] = [];
+
+  // Build a symmetric index of disjoint pairs for O(1) lookup
+  const disjointPairs = new Set<string>();
+  for (const cls of ontology.classes.values()) {
+    for (const djUri of cls.disjointWith) {
+      disjointPairs.add([cls.uri, djUri].sort().join('\0'));
+    }
+  }
+  const isDisjoint = (a: string, b: string): boolean => disjointPairs.has([a, b].sort().join('\0'));
+
+  // Collect all transitive ancestors for a class (BFS, cycle-safe)
+  const getAncestors = (uri: string): string[] => {
+    const visited = new Set<string>();
+    const queue = [...(ontology.classes.get(uri)?.subClassOf ?? [])];
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      if (cur === undefined || visited.has(cur)) continue;
+      visited.add(cur);
+      const curCls = ontology.classes.get(cur);
+      if (curCls) {
+        for (const parent of curCls.subClassOf) {
+          if (!visited.has(parent)) queue.push(parent);
+        }
+      }
+    }
+    return [...visited];
+  };
+
+  for (const cls of ontology.classes.values()) {
+    // Check 1: self-disjoint
+    if (cls.disjointWith.includes(cls.uri)) {
+      errors.push({
+        severity: 'error',
+        message: 'Class is declared disjoint with itself (unsatisfiable)',
+        elementUri: cls.uri,
+        elementType: 'class',
+      });
+    }
+
+    // Check 2: subclass of a class it is also disjoint with
+    for (const parentUri of cls.subClassOf) {
+      if (isDisjoint(cls.uri, parentUri)) {
+        errors.push({
+          severity: 'error',
+          message: `Class is both a subclass and disjoint with "${localName(parentUri)}" (unsatisfiable)`,
+          elementUri: cls.uri,
+          elementType: 'class',
+        });
+      }
+    }
+
+    // Check 3: inherits from two mutually disjoint ancestors
+    const ancestors = getAncestors(cls.uri);
+    let foundAncestorConflict = false;
+    for (let i = 0; i < ancestors.length && !foundAncestorConflict; i++) {
+      for (let j = i + 1; j < ancestors.length && !foundAncestorConflict; j++) {
+        if (isDisjoint(ancestors[i], ancestors[j])) {
+          errors.push({
+            severity: 'error',
+            message: `Class inherits from mutually disjoint classes "${localName(ancestors[i])}" and "${localName(ancestors[j])}" (unsatisfiable)`,
+            elementUri: cls.uri,
+            elementType: 'class',
+          });
+          foundAncestorConflict = true;
+        }
+      }
+    }
+  }
+
+  // Check 4: functional property with minCardinality > 1
+  for (const prop of ontology.objectProperties.values()) {
+    if (
+      prop.characteristics?.includes('functional') &&
+      prop.minCardinality !== undefined &&
+      prop.minCardinality > 1
+    ) {
+      errors.push({
+        severity: 'error',
+        message: `Functional property has minCardinality ${prop.minCardinality}, contradicting the max-1 functional restriction`,
+        elementUri: prop.uri,
+        elementType: 'objectProperty',
+      });
+    }
+  }
+
   return errors;
 }
 
