@@ -259,3 +259,232 @@ describe('validateOntology — individuals', () => {
     ).toBe(true);
   });
 });
+
+describe('validateOntology — OWL consistency checks', () => {
+  it('detects self-disjoint class', () => {
+    const o = makeOntology((o) => {
+      o.classes.set(`${EX}Paradox`, {
+        uri: `${EX}Paradox`,
+        label: 'Paradox',
+        subClassOf: [],
+        disjointWith: [`${EX}Paradox`],
+      });
+    });
+    const errors = validateOntology(o);
+    expect(
+      errors.some((e) => e.severity === 'error' && e.message.includes('disjoint with itself')),
+    ).toBe(true);
+  });
+
+  it('detects subclass-disjoint conflict (A subClassOf B AND A disjointWith B)', () => {
+    const o = makeOntology((o) => {
+      o.classes.set(`${EX}Animal`, {
+        uri: `${EX}Animal`,
+        label: 'Animal',
+        subClassOf: [],
+        disjointWith: [],
+      });
+      o.classes.set(`${EX}Plant`, {
+        uri: `${EX}Plant`,
+        label: 'Plant',
+        subClassOf: [`${EX}Animal`],
+        disjointWith: [`${EX}Animal`],
+      });
+    });
+    const errors = validateOntology(o);
+    expect(
+      errors.some(
+        (e) =>
+          e.elementUri === `${EX}Plant` &&
+          e.severity === 'error' &&
+          e.message.includes('subclass and disjoint'),
+      ),
+    ).toBe(true);
+  });
+
+  it('detects subclass-disjoint conflict when disjointness is stated on the parent', () => {
+    const o = makeOntology((o) => {
+      // Animal disjointWith Plant, but Plant subClassOf Animal — conflict detected via symmetry
+      o.classes.set(`${EX}Animal`, {
+        uri: `${EX}Animal`,
+        label: 'Animal',
+        subClassOf: [],
+        disjointWith: [`${EX}Plant`],
+      });
+      o.classes.set(`${EX}Plant`, {
+        uri: `${EX}Plant`,
+        label: 'Plant',
+        subClassOf: [`${EX}Animal`],
+        disjointWith: [],
+      });
+    });
+    const errors = validateOntology(o);
+    expect(
+      errors.some(
+        (e) =>
+          e.elementUri === `${EX}Plant` &&
+          e.severity === 'error' &&
+          e.message.includes('subclass and disjoint'),
+      ),
+    ).toBe(true);
+  });
+
+  it('detects class inheriting from mutually disjoint ancestors', () => {
+    const o = makeOntology((o) => {
+      o.classes.set(`${EX}Cat`, {
+        uri: `${EX}Cat`,
+        label: 'Cat',
+        subClassOf: [],
+        disjointWith: [`${EX}Dog`],
+      });
+      o.classes.set(`${EX}Dog`, {
+        uri: `${EX}Dog`,
+        label: 'Dog',
+        subClassOf: [],
+        disjointWith: [],
+      });
+      // CatDog inherits from both Cat and Dog which are disjoint → unsatisfiable
+      o.classes.set(`${EX}CatDog`, {
+        uri: `${EX}CatDog`,
+        label: 'CatDog',
+        subClassOf: [`${EX}Cat`, `${EX}Dog`],
+        disjointWith: [],
+      });
+    });
+    const errors = validateOntology(o);
+    expect(
+      errors.some(
+        (e) =>
+          e.elementUri === `${EX}CatDog` &&
+          e.severity === 'error' &&
+          e.message.includes('mutually disjoint'),
+      ),
+    ).toBe(true);
+  });
+
+  it('detects unsatisfiable class via transitive ancestor disjointness', () => {
+    const o = makeOntology((o) => {
+      // A disjointWith B
+      // C subClassOf A
+      // D subClassOf B
+      // E subClassOf C AND D  →  E inherits from disjoint ancestors A and B
+      o.classes.set(`${EX}A`, {
+        uri: `${EX}A`,
+        label: 'A',
+        subClassOf: [],
+        disjointWith: [`${EX}B`],
+      });
+      o.classes.set(`${EX}B`, {
+        uri: `${EX}B`,
+        label: 'B',
+        subClassOf: [],
+        disjointWith: [],
+      });
+      o.classes.set(`${EX}C`, {
+        uri: `${EX}C`,
+        label: 'C',
+        subClassOf: [`${EX}A`],
+        disjointWith: [],
+      });
+      o.classes.set(`${EX}D`, {
+        uri: `${EX}D`,
+        label: 'D',
+        subClassOf: [`${EX}B`],
+        disjointWith: [],
+      });
+      o.classes.set(`${EX}E`, {
+        uri: `${EX}E`,
+        label: 'E',
+        subClassOf: [`${EX}C`, `${EX}D`],
+        disjointWith: [],
+      });
+    });
+    const errors = validateOntology(o);
+    expect(
+      errors.some(
+        (e) =>
+          e.elementUri === `${EX}E` &&
+          e.severity === 'error' &&
+          e.message.includes('mutually disjoint'),
+      ),
+    ).toBe(true);
+  });
+
+  it('does not flag valid multiple inheritance without disjointness', () => {
+    const o = makeOntology((o) => {
+      o.classes.set(`${EX}Living`, {
+        uri: `${EX}Living`,
+        label: 'Living',
+        subClassOf: [],
+        disjointWith: [],
+      });
+      o.classes.set(`${EX}Aquatic`, {
+        uri: `${EX}Aquatic`,
+        label: 'Aquatic',
+        subClassOf: [],
+        disjointWith: [],
+      });
+      o.classes.set(`${EX}Fish`, {
+        uri: `${EX}Fish`,
+        label: 'Fish',
+        subClassOf: [`${EX}Living`, `${EX}Aquatic`],
+        disjointWith: [],
+      });
+    });
+    const errors = validateOntology(o).filter(
+      (e) => e.severity === 'error' && e.elementUri === `${EX}Fish`,
+    );
+    expect(errors).toEqual([]);
+  });
+
+  it('detects functional property with minCardinality > 1', () => {
+    const o = makeOntology((o) => {
+      o.classes.set(`${EX}Person`, {
+        uri: `${EX}Person`,
+        label: 'Person',
+        subClassOf: [],
+        disjointWith: [],
+      });
+      o.objectProperties.set(`${EX}hasMother`, {
+        uri: `${EX}hasMother`,
+        label: 'has mother',
+        domain: [`${EX}Person`],
+        range: [`${EX}Person`],
+        characteristics: ['functional'],
+        minCardinality: 2,
+      });
+    });
+    const errors = validateOntology(o);
+    expect(
+      errors.some(
+        (e) =>
+          e.elementUri === `${EX}hasMother` &&
+          e.severity === 'error' &&
+          e.message.includes('Functional property'),
+      ),
+    ).toBe(true);
+  });
+
+  it('does not flag functional property with minCardinality of 1', () => {
+    const o = makeOntology((o) => {
+      o.classes.set(`${EX}Person`, {
+        uri: `${EX}Person`,
+        label: 'Person',
+        subClassOf: [],
+        disjointWith: [],
+      });
+      o.objectProperties.set(`${EX}hasMother`, {
+        uri: `${EX}hasMother`,
+        label: 'has mother',
+        domain: [`${EX}Person`],
+        range: [`${EX}Person`],
+        characteristics: ['functional'],
+        minCardinality: 1,
+      });
+    });
+    const errors = validateOntology(o).filter(
+      (e) => e.severity === 'error' && e.elementUri === `${EX}hasMother`,
+    );
+    expect(errors).toEqual([]);
+  });
+});
