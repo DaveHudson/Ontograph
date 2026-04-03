@@ -175,7 +175,7 @@ export function useClaude(): UseClaudeReturn {
 
       // Graph query
       window.api.onClaudeGraphQuery((query: Record<string, unknown>) => {
-        const result = executeGraphQuery(store.getState().ontology, query as GraphQuery);
+        const result = executeGraphQuery(store.getState().ontology, query as unknown as GraphQuery);
         window.api.respondGraphQuery(result);
       }),
 

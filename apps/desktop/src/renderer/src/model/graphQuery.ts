@@ -1,4 +1,4 @@
-import type { Ontology } from './types';
+import type { Ontology, OWLCharacteristic } from './types';
 
 export type GraphQueryType =
   | 'subclasses'
@@ -87,7 +87,13 @@ export function executeGraphQuery(ontology: Ontology, query: GraphQuery): GraphQ
     case 'class_properties': {
       const classUri = query.classUri;
       if (!classUri) return { error: 'classUri is required for class_properties query' };
-      const objectProps = [];
+      const objectProps: {
+        uri: string;
+        label: string;
+        comment: string | undefined;
+        range: { uri: string; label: string }[];
+        characteristics: OWLCharacteristic[];
+      }[] = [];
       for (const prop of ontology.objectProperties.values()) {
         if (prop.domain.includes(classUri)) {
           objectProps.push({
@@ -99,7 +105,12 @@ export function executeGraphQuery(ontology: Ontology, query: GraphQuery): GraphQ
           });
         }
       }
-      const datatypeProps = [];
+      const datatypeProps: {
+        uri: string;
+        label: string;
+        comment: string | undefined;
+        range: string;
+      }[] = [];
       for (const prop of ontology.datatypeProperties.values()) {
         if (prop.domain.includes(classUri)) {
           datatypeProps.push({
@@ -138,7 +149,13 @@ export function executeGraphQuery(ontology: Ontology, query: GraphQuery): GraphQ
     case 'instances': {
       const classUri = query.classUri;
       if (!classUri) return { error: 'classUri is required for instances query' };
-      const results = [];
+      const results: {
+        uri: string;
+        label: string;
+        comment: string | undefined;
+        objectAssertions: { property: string; target: string }[];
+        dataAssertions: { property: string; value: string; datatype?: string }[];
+      }[] = [];
       for (const ind of ontology.individuals.values()) {
         if (ind.types.includes(classUri)) {
           results.push({
