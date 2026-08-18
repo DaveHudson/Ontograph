@@ -20,7 +20,7 @@ interface FakeConnection extends CodexAppServerConnection {
 function supportedExec(): ExecFileFn {
   return vi.fn<ExecFileFn>(async (file) => {
     if (file === 'which') return { stdout: '/opt/bin/codex\n' };
-    return { stdout: 'codex-cli 0.130.0\n' };
+    return { stdout: 'codex-cli 0.147.0\n' };
   });
 }
 
@@ -110,7 +110,7 @@ describe('CodexProviderRuntime', () => {
     await expect(runtime.getStatus()).resolves.toMatchObject({
       provider: 'codex',
       readiness: 'authenticated_chatgpt',
-      cliVersion: '0.130.0',
+      cliVersion: '0.147.0',
     });
     expect(appServerFactory).toHaveBeenCalledWith('/opt/bin/codex');
   });
@@ -150,7 +150,7 @@ describe('CodexProviderRuntime', () => {
       provider: 'codex',
       readiness: 'rate_limited',
       detail: 'rate limit reached',
-      cliVersion: '0.130.0',
+      cliVersion: '0.147.0',
     });
   });
 
@@ -190,7 +190,7 @@ describe('CodexProviderRuntime', () => {
     await expect(runtime.getStatus()).resolves.toMatchObject({
       provider: 'codex',
       readiness: 'authenticated_chatgpt',
-      cliVersion: '0.130.0',
+      cliVersion: '0.147.0',
     });
   });
 
@@ -215,7 +215,7 @@ describe('CodexProviderRuntime', () => {
     await expect(runtime.getStatus()).resolves.toMatchObject({
       provider: 'codex',
       readiness: 'not_signed_in',
-      cliVersion: '0.130.0',
+      cliVersion: '0.147.0',
     });
   });
 
@@ -323,7 +323,27 @@ describe('CodexProviderRuntime', () => {
     expect(request).toHaveBeenNthCalledWith(3, 'account/logout', undefined);
   });
 
-  it('normalizes model/list results after initializing app-server', async () => {
+  it('exposes only GPT-5.6 models with Sol first after initializing app-server', async () => {
+    const catalog = [
+      {
+        model: 'gpt-5.6-sol',
+        displayName: 'GPT-5.6-Sol',
+        defaultReasoningEffort: 'low',
+        efforts: ['low', 'medium', 'high', 'xhigh', 'max', 'ultra'],
+      },
+      {
+        model: 'gpt-5.6-terra',
+        displayName: 'GPT-5.6-Terra',
+        defaultReasoningEffort: 'medium',
+        efforts: ['low', 'medium', 'high', 'xhigh', 'max', 'ultra'],
+      },
+      {
+        model: 'gpt-5.6-luna',
+        displayName: 'GPT-5.6-Luna',
+        defaultReasoningEffort: 'medium',
+        efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+      },
+    ];
     const request = vi.fn<CodexAppServerConnection['client']['request']>(async (method) => {
       if (method === 'initialize') {
         return {
@@ -337,22 +357,44 @@ describe('CodexProviderRuntime', () => {
         return {
           data: [
             {
-              id: 'gpt-5.4-id',
-              model: 'gpt-5.4',
-              displayName: 'gpt-5.4',
-              supportedReasoningEfforts: [{ reasoningEffort: 'high', description: 'High' }],
+              id: 'gpt-5.5-id',
+              model: 'gpt-5.5',
+              displayName: 'GPT-5.5',
+              supportedReasoningEfforts: [],
               upgrade: null,
               upgradeInfo: null,
               availabilityNux: null,
               description: '',
               hidden: false,
-              defaultReasoningEffort: 'high',
+              defaultReasoningEffort: 'medium',
               inputModalities: ['text'],
               supportsPersonality: false,
               additionalSpeedTiers: [],
               serviceTiers: [],
-              isDefault: true,
+              isDefault: false,
             },
+            ...catalog
+              .toReversed()
+              .map(({ model, displayName, defaultReasoningEffort, efforts }) => ({
+                id: `${model}-id`,
+                model,
+                displayName,
+                supportedReasoningEfforts: efforts.map((reasoningEffort) => ({
+                  reasoningEffort,
+                  description: reasoningEffort,
+                })),
+                upgrade: null,
+                upgradeInfo: null,
+                availabilityNux: null,
+                description: '',
+                hidden: false,
+                defaultReasoningEffort,
+                inputModalities: ['text'],
+                supportsPersonality: false,
+                additionalSpeedTiers: ['fast'],
+                serviceTiers: [{ id: 'priority', name: 'Fast', description: '1.5x speed' }],
+                isDefault: model === 'gpt-5.6-sol',
+              })),
           ],
           nextCursor: null,
         };
@@ -365,17 +407,31 @@ describe('CodexProviderRuntime', () => {
       appServerFactory,
     });
 
-    await expect(runtime.listModels()).resolves.toEqual([
-      {
-        id: 'gpt-5.4',
-        label: 'GPT-5.4',
+    const models = await runtime.listModels();
+    const effortLabels: Record<string, string> = {
+      low: 'Low',
+      medium: 'Medium',
+      high: 'High',
+      xhigh: 'Extra High',
+      max: 'Max',
+      ultra: 'Ultra',
+    };
+
+    expect(models).toEqual(
+      catalog.map(({ model, displayName, defaultReasoningEffort, efforts }) => ({
+        id: model,
+        label: displayName,
         supportsReasoningEffort: true,
         optionDescriptors: [
           {
             id: 'reasoningEffort',
             type: 'select',
             label: 'Effort',
-            options: [{ id: 'high', label: 'High', isDefault: true }],
+            options: efforts.map((id) => ({
+              id,
+              label: effortLabels[id],
+              ...(id === defaultReasoningEffort ? { isDefault: true } : {}),
+            })),
           },
           {
             id: 'fastMode',
@@ -384,8 +440,8 @@ describe('CodexProviderRuntime', () => {
             defaultValue: false,
           },
         ],
-      },
-    ]);
+      })),
+    );
     expect(appServerFactory).toHaveBeenCalledWith('/opt/bin/codex');
     expect(request).toHaveBeenNthCalledWith(1, 'initialize', {
       clientInfo: { name: 'contexture', title: 'Contexture', version: '0.14.0' },
@@ -435,7 +491,7 @@ describe('CodexProviderRuntime', () => {
             status: 'idle',
             path: null,
             cwd: '/tmp',
-            cliVersion: '0.130.0',
+            cliVersion: '0.147.0',
             source: 'app-server',
             threadSource: null,
             agentNickname: null,
@@ -528,7 +584,7 @@ describe('CodexProviderRuntime', () => {
             status: 'idle',
             path: null,
             cwd: '/tmp',
-            cliVersion: '0.130.0',
+            cliVersion: '0.147.0',
             source: 'app-server',
             threadSource: null,
             agentNickname: null,
@@ -624,7 +680,7 @@ describe('CodexProviderRuntime', () => {
             status: 'idle',
             path: null,
             cwd: '/tmp',
-            cliVersion: '0.130.0',
+            cliVersion: '0.147.0',
             source: 'appServer',
             threadSource: null,
             agentNickname: null,
@@ -726,7 +782,7 @@ describe('CodexProviderRuntime', () => {
             status: 'idle',
             path: null,
             cwd: '/tmp',
-            cliVersion: '0.130.0',
+            cliVersion: '0.147.0',
             source: 'appServer',
             threadSource: null,
             agentNickname: null,

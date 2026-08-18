@@ -1,1 +1,1 @@
-export const CODEX_PROVIDER_MIN_CLI_VERSION = '0.130.0';
+export const CODEX_PROVIDER_MIN_CLI_VERSION = '0.147.0';

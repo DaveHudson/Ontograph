@@ -15,9 +15,9 @@ describe('Codex CLI detection', () => {
   });
 
   it('compares semantic versions', () => {
-    expect(compareSemver('0.130.0', CODEX_PROVIDER_MIN_CLI_VERSION)).toBe(0);
-    expect(compareSemver('0.131.0', CODEX_PROVIDER_MIN_CLI_VERSION)).toBeGreaterThan(0);
-    expect(compareSemver('0.129.9', CODEX_PROVIDER_MIN_CLI_VERSION)).toBeLessThan(0);
+    expect(compareSemver('0.147.0', CODEX_PROVIDER_MIN_CLI_VERSION)).toBe(0);
+    expect(compareSemver('0.148.0', CODEX_PROVIDER_MIN_CLI_VERSION)).toBeGreaterThan(0);
+    expect(compareSemver('0.146.9', CODEX_PROVIDER_MIN_CLI_VERSION)).toBeLessThan(0);
   });
 
   it('reports missing CLI status', async () => {
@@ -57,10 +57,27 @@ describe('Codex CLI detection', () => {
     });
   });
 
+  it('rejects Codex versions that predate the GPT-5.6 model catalog', async () => {
+    const exec = vi.fn<ExecFileFn>(async (file) => {
+      if (file === 'which') return { stdout: '/usr/local/bin/codex\n' };
+      return { stdout: 'codex-cli 0.146.0\n' };
+    });
+
+    const info = await detectCodexCli(exec);
+
+    expect(info.supported).toBe(false);
+    expect(codexCliInfoToStatus(info)).toMatchObject({
+      provider: 'codex',
+      readiness: 'cli_outdated',
+      cliVersion: '0.146.0',
+      minimumCliVersion: '0.147.0',
+    });
+  });
+
   it('reports supported CLI before app-server is initialized', async () => {
     const exec = vi.fn<ExecFileFn>(async (file) => {
       if (file === 'which') return { stdout: '/opt/bin/codex\n' };
-      return { stdout: 'codex-cli 0.130.0\n' };
+      return { stdout: 'codex-cli 0.147.0\n' };
     });
 
     const info = await detectCodexCli(exec);
@@ -68,13 +85,13 @@ describe('Codex CLI detection', () => {
     expect(info).toEqual({
       installed: true,
       path: '/opt/bin/codex',
-      version: '0.130.0',
+      version: '0.147.0',
       supported: true,
     });
     expect(codexCliInfoToStatus(info)).toMatchObject({
       provider: 'codex',
       readiness: 'app_server_unavailable',
-      cliVersion: '0.130.0',
+      cliVersion: '0.147.0',
       minimumCliVersion: CODEX_PROVIDER_MIN_CLI_VERSION,
     });
   });
