@@ -511,6 +511,7 @@ const CODEX_REASONING_LABELS: Record<string, string> = {
   high: 'High',
   xhigh: 'Extra High',
   max: 'Max',
+  ultra: 'Ultra',
 };
 
 function codexOptionDescriptors(
