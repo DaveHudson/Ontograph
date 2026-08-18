@@ -323,7 +323,7 @@ describe('CodexProviderRuntime', () => {
     expect(request).toHaveBeenNthCalledWith(3, 'account/logout', undefined);
   });
 
-  it('normalizes the GPT-5.6 model family after initializing app-server', async () => {
+  it('exposes only GPT-5.6 models with Sol first after initializing app-server', async () => {
     const catalog = [
       {
         model: 'gpt-5.6-sol',
@@ -355,26 +355,47 @@ describe('CodexProviderRuntime', () => {
       }
       if (method === 'model/list') {
         return {
-          data: catalog.map(({ model, displayName, defaultReasoningEffort, efforts }) => ({
-            id: `${model}-id`,
-            model,
-            displayName,
-            supportedReasoningEfforts: efforts.map((reasoningEffort) => ({
-              reasoningEffort,
-              description: reasoningEffort,
-            })),
-            upgrade: null,
-            upgradeInfo: null,
-            availabilityNux: null,
-            description: '',
-            hidden: false,
-            defaultReasoningEffort,
-            inputModalities: ['text'],
-            supportsPersonality: false,
-            additionalSpeedTiers: ['fast'],
-            serviceTiers: [{ id: 'priority', name: 'Fast', description: '1.5x speed' }],
-            isDefault: model === 'gpt-5.6-sol',
-          })),
+          data: [
+            {
+              id: 'gpt-5.5-id',
+              model: 'gpt-5.5',
+              displayName: 'GPT-5.5',
+              supportedReasoningEfforts: [],
+              upgrade: null,
+              upgradeInfo: null,
+              availabilityNux: null,
+              description: '',
+              hidden: false,
+              defaultReasoningEffort: 'medium',
+              inputModalities: ['text'],
+              supportsPersonality: false,
+              additionalSpeedTiers: [],
+              serviceTiers: [],
+              isDefault: false,
+            },
+            ...catalog
+              .toReversed()
+              .map(({ model, displayName, defaultReasoningEffort, efforts }) => ({
+                id: `${model}-id`,
+                model,
+                displayName,
+                supportedReasoningEfforts: efforts.map((reasoningEffort) => ({
+                  reasoningEffort,
+                  description: reasoningEffort,
+                })),
+                upgrade: null,
+                upgradeInfo: null,
+                availabilityNux: null,
+                description: '',
+                hidden: false,
+                defaultReasoningEffort,
+                inputModalities: ['text'],
+                supportsPersonality: false,
+                additionalSpeedTiers: ['fast'],
+                serviceTiers: [{ id: 'priority', name: 'Fast', description: '1.5x speed' }],
+                isDefault: model === 'gpt-5.6-sol',
+              })),
+          ],
           nextCursor: null,
         };
       }

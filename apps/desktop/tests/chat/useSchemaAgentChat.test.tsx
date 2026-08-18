@@ -593,6 +593,23 @@ describe('useSchemaAgentChat', () => {
     );
   });
 
+  it('replaces a stored legacy Codex model with Sol', async () => {
+    localStorage.setItem('contexture-schema-agent-codex-model', 'gpt-5.5');
+    const { api } = makeApi();
+    vi.mocked(api.listModels).mockResolvedValue([
+      { id: 'gpt-5.6-sol', label: 'GPT-5.6-Sol' },
+      { id: 'gpt-5.6-terra', label: 'GPT-5.6-Terra' },
+      { id: 'gpt-5.6-luna', label: 'GPT-5.6-Luna' },
+    ]);
+
+    const { result } = renderHook(() => useSchemaAgentChat({ api }));
+
+    await waitFor(() => {
+      expect(result.current.model).toBe('gpt-5.6-sol');
+    });
+    expect(localStorage.getItem('contexture-schema-agent-codex-model')).toBe('gpt-5.6-sol');
+  });
+
   it('restores provider, model, effort, and options atomically', async () => {
     const { api } = makeApi();
     vi.mocked(api.listModels).mockImplementation(async (provider) =>

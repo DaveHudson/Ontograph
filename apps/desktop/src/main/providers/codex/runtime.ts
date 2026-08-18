@@ -66,6 +66,7 @@ export const CODEX_PROVIDER_CAPABILITIES: ProviderCapabilities = {
 };
 
 const SCHEMA_AGENT_CODEX_CWD = tmpdir();
+const CODEX_MODELS = ['gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'] as const;
 const SCHEMA_AGENT_APPROVAL_POLICY: AskForApproval = {
   granular: {
     sandbox_approval: true,
@@ -162,7 +163,11 @@ export class CodexProviderRuntime implements ProviderRuntime {
       cursor = response.nextCursor;
     } while (cursor);
 
-    return models;
+    const modelsById = new Map(models.map((model) => [model.id.toLowerCase(), model]));
+    return CODEX_MODELS.flatMap((modelId) => {
+      const model = modelsById.get(modelId);
+      return model ? [model] : [];
+    });
   }
 
   async startThread(input: StartThreadInput): Promise<ProviderThreadRef> {
