@@ -505,10 +505,12 @@ export class CodexProviderRuntime implements ProviderRuntime {
 }
 
 const CODEX_REASONING_LABELS: Record<string, string> = {
+  none: 'None',
   low: 'Low',
   medium: 'Medium',
   high: 'High',
   xhigh: 'Extra High',
+  max: 'Max',
 };
 
 function codexOptionDescriptors(

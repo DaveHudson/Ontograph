@@ -323,7 +323,7 @@ describe('CodexProviderRuntime', () => {
     expect(request).toHaveBeenNthCalledWith(3, 'account/logout', undefined);
   });
 
-  it('normalizes model/list results after initializing app-server', async () => {
+  it('normalizes the GPT-5.6 model family after initializing app-server', async () => {
     const request = vi.fn<CodexAppServerConnection['client']['request']>(async (method) => {
       if (method === 'initialize') {
         return {
@@ -335,25 +335,30 @@ describe('CodexProviderRuntime', () => {
       }
       if (method === 'model/list') {
         return {
-          data: [
-            {
-              id: 'gpt-5.4-id',
-              model: 'gpt-5.4',
-              displayName: 'gpt-5.4',
-              supportedReasoningEfforts: [{ reasoningEffort: 'high', description: 'High' }],
-              upgrade: null,
-              upgradeInfo: null,
-              availabilityNux: null,
-              description: '',
-              hidden: false,
-              defaultReasoningEffort: 'high',
-              inputModalities: ['text'],
-              supportsPersonality: false,
-              additionalSpeedTiers: [],
-              serviceTiers: [],
-              isDefault: true,
-            },
-          ],
+          data: ['gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'].map((model) => ({
+            id: `${model}-id`,
+            model,
+            displayName: model,
+            supportedReasoningEfforts: [
+              { reasoningEffort: 'none', description: 'None' },
+              { reasoningEffort: 'low', description: 'Low' },
+              { reasoningEffort: 'medium', description: 'Medium' },
+              { reasoningEffort: 'high', description: 'High' },
+              { reasoningEffort: 'xhigh', description: 'Extra high' },
+              { reasoningEffort: 'max', description: 'Max' },
+            ],
+            upgrade: null,
+            upgradeInfo: null,
+            availabilityNux: null,
+            description: '',
+            hidden: false,
+            defaultReasoningEffort: 'medium',
+            inputModalities: ['text'],
+            supportsPersonality: false,
+            additionalSpeedTiers: [],
+            serviceTiers: [],
+            isDefault: model === 'gpt-5.6-sol',
+          })),
           nextCursor: null,
         };
       }
@@ -365,17 +370,26 @@ describe('CodexProviderRuntime', () => {
       appServerFactory,
     });
 
-    await expect(runtime.listModels()).resolves.toEqual([
-      {
-        id: 'gpt-5.4',
-        label: 'GPT-5.4',
+    const models = await runtime.listModels();
+
+    expect(models).toEqual(
+      ['gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'].map((id) => ({
+        id,
+        label: id.replace('gpt-', 'GPT-'),
         supportsReasoningEffort: true,
         optionDescriptors: [
           {
             id: 'reasoningEffort',
             type: 'select',
             label: 'Effort',
-            options: [{ id: 'high', label: 'High', isDefault: true }],
+            options: [
+              { id: 'none', label: 'None' },
+              { id: 'low', label: 'Low' },
+              { id: 'medium', label: 'Medium', isDefault: true },
+              { id: 'high', label: 'High' },
+              { id: 'xhigh', label: 'Extra High' },
+              { id: 'max', label: 'Max' },
+            ],
           },
           {
             id: 'fastMode',
@@ -384,8 +398,8 @@ describe('CodexProviderRuntime', () => {
             defaultValue: false,
           },
         ],
-      },
-    ]);
+      })),
+    );
     expect(appServerFactory).toHaveBeenCalledWith('/opt/bin/codex');
     expect(request).toHaveBeenNthCalledWith(1, 'initialize', {
       clientInfo: { name: 'contexture', title: 'Contexture', version: '0.14.0' },
